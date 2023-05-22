@@ -1,0 +1,44 @@
+[tool.poetry]
+name = "jerboa"
+version = '0.1.0'
+description='jerboa reproduce alpaca results'
+readme = 'README.md'
+authors=['Jina ai']
+license='Apache 2.0'
+
+[tool.poetry.group.dev.dependencies]
+pytest = "^7.3.1"
+black = "^23.3.0"
+isort = "^5.12.0"
+ruff = "^0.0.269"
+pre-commit = "^3.3.2"
+jupyterlab = "^4.0.0"
+jupyterlab-code-formatter = "^2.2.1"
+accelerate = "^0.19.0"
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.poetry.dependencies]
+python = ">=3.8,<4.0"
+torch = { version = ">=2.0.1", optional = true }
+appdirs = "^1.4.4"
+loralib = "^0.1.1"
+bitsandbytes = "^0.38.1"
+datasets = "^2.12.0"
+fire = "^0.5.0"
+peft = "^0.3.0"
+transformers = "^4.29.2"
+
+
+[tool.poetry.extras]
+torch = ["torch"]
+
+[tool.black]
+skip-string-normalization = true # equivalent to black -S
+
+[tool.ruff]
+ignore = [
+    "E501",  # line too long, handled by black
+]
