@@ -34,3 +34,7 @@ install pre commit hook
 pre-commit install
 ```
 
+
+## What to do with this repo
+
+for now you can take a look at the [alpaca lora folder](/alpaca-lora/README.md) 

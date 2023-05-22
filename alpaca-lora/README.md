@@ -9,6 +9,7 @@ the rest of this readme is the original README from the repo.
 
 ## Jina specific stuff
 
+!!! To follow the rest be sure to have enabled your virtual env with poetry by looking at the top root README.md 
 
 We can run the code in debug mode, this allows to test the code with low resource
 
