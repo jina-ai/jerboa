@@ -113,24 +113,23 @@ def train(
     # Debugging configuration for the Llama model, reduce parameters
     llama_config = LlamaConfig(
         hidden_size=4096,
-        intermediate_size=512,
+        intermediate_size=64,
         num_hidden_layers=1,
         num_attention_heads=1,
     )
 
-    # Use default Llama settings if not debugging
-    llama_config = llama_config if debug else LlamaConfig()
-    # llama_config = LlamaConfig()
-
-    model = LlamaForCausalLM.from_pretrained(
-        base_model,
-        load_in_8bit=True,
-        torch_dtype=torch.float16,
-        device_map=device_map,
-        config=llama_config,
-    )
-
-    print(f'Footprint: {model.get_memory_footprint()}')
+    # Load untrained model if debugging with reduced footprint
+    if debug:
+        model = LlamaForCausalLM(llama_config)
+    # Load pretrained model with standard Llama configuration
+    else:
+        model = LlamaForCausalLM.from_pretrained(
+            base_model,
+            load_in_8bit=True,
+            torch_dtype=torch.float16,
+            device_map=device_map,
+            config=LlamaConfig(),
+        )
 
     tokenizer = LlamaTokenizer.from_pretrained(base_model)
 
@@ -219,7 +218,7 @@ def train(
         else:
             print(f"Checkpoint {checkpoint_name} not found")
 
-    model.print_trainable_parameters()  # Be more transparent about the % of trainable params.
+    # model.print_trainable_parameters()  # Be more transparent about the % of trainable params.
 
     if debug:
         train_data = data["train"].select(range(10)).map(generate_and_tokenize_prompt)
