@@ -14,9 +14,20 @@ pip install -U poetry
 
 You don't need to setup a virtual env, poetry will take care of it.
 
+If you encounter a keyring error on the Berlin GPU run: 
+```bash
+poetry run python -m pip install keyring
+poetry run python -m keyring --disable
+```
+
 
 ```bash
 poetry install
+```
+
+For Berlin GPU install torch:
+```bash
+pip install torch
 ```
 
 then activate the virtual env
