@@ -121,7 +121,7 @@ def train(
     # Load untrained model if debugging with reduced footprint
     if debug:
         model = LlamaForCausalLM(llama_config)
-    # Load pretrained model with standard Llama configuration
+    # Load pretrained model with default Llama configuration
     else:
         model = LlamaForCausalLM.from_pretrained(
             base_model,
