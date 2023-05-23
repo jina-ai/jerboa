@@ -13,7 +13,7 @@ from peft import (
     prepare_model_for_int8_training,
     set_peft_model_state_dict,
 )
-from transformers import LlamaForCausalLM, LlamaTokenizer
+from transformers import LlamaConfig, LlamaForCausalLM, LlamaTokenizer
 from utils.prompter import Prompter
 
 
@@ -110,12 +110,27 @@ def train(
     if len(wandb_log_model) > 0:
         os.environ["WANDB_LOG_MODEL"] = wandb_log_model
 
+    # Debugging configuration for the Llama model, reduce parameters
+    llama_config = LlamaConfig(
+        hidden_size=4096,
+        intermediate_size=512,
+        num_hidden_layers=1,
+        num_attention_heads=1,
+    )
+
+    # Use default Llama settings if not debugging
+    llama_config = llama_config if debug else LlamaConfig()
+    # llama_config = LlamaConfig()
+
     model = LlamaForCausalLM.from_pretrained(
         base_model,
         load_in_8bit=True,
         torch_dtype=torch.float16,
         device_map=device_map,
+        config=llama_config,
     )
+
+    print(f'Footprint: {model.get_memory_footprint()}')
 
     tokenizer = LlamaTokenizer.from_pretrained(base_model)
 
@@ -178,6 +193,7 @@ def train(
         bias="none",
         task_type="CAUSAL_LM",
     )
+
     model = get_peft_model(model, config)
 
     if data_path.endswith(".json") or data_path.endswith(".jsonl"):
