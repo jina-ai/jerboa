@@ -110,16 +110,16 @@ def train(
     if len(wandb_log_model) > 0:
         os.environ["WANDB_LOG_MODEL"] = wandb_log_model
 
-    # Debugging configuration for the Llama model, reduce parameters
-    llama_config = LlamaConfig(
-        hidden_size=4096,
-        intermediate_size=64,
-        num_hidden_layers=1,
-        num_attention_heads=1,
-    )
-
-    # Load untrained model if debugging with reduced footprint
+    # Debugging model with smaller footprint
     if debug:
+        # Debugging configuration for the Llama model, reduces parameters
+        llama_config = LlamaConfig(
+            hidden_size=4096,
+            intermediate_size=64,
+            num_hidden_layers=1,
+            num_attention_heads=1,
+        )
+
         model = LlamaForCausalLM(llama_config)
     # Load pretrained model with default Llama configuration
     else:
