@@ -12,15 +12,13 @@ first install poetry
 pip install -U poetry
 ```
 
-You don't need to setup a virtual env, poetry will take care of it.
-
 If you encounter a keyring error on the Berlin GPU run: 
 ```bash
 poetry run python -m pip install keyring
 poetry run python -m keyring --disable
 ```
 
-
+You don't need to setup a virtual env, poetry will take care of it.
 ```bash
 poetry install
 ```
