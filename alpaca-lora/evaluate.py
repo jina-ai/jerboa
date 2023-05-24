@@ -40,7 +40,7 @@ def evaluate(
         "device_map": {"": device},
     }
     peft_args = {
-        "lora_weights": lora_weights,
+        "model_id": lora_weights,
         "torch_dtype": torch.float16,
         "device_map": {"": device},
     }
