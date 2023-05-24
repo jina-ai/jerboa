@@ -115,7 +115,7 @@ def train(
     if debug or base_model == 'debug_llama':
         # Debugging configuration for the Llama model, reduces parameters
         # If a gpu is available the model will run on the gpu, otherwise cpu
-        device = 'cuda' if torch.cuda.is_available() else 'gpu'
+        device = 'cuda' if torch.cuda.is_available() else 'cpu'
         llama_config = low_footprint_config
         model = LlamaForCausalLM(llama_config).to(device)
 
