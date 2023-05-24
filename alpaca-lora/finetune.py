@@ -49,9 +49,9 @@ def train(
     wandb_log_model: str = "",  # options: false | true
     resume_from_checkpoint: str = None,  # either training checkpoint or final adapter
     prompt_template_name: str = "alpaca",  # The prompt template to use, will default to alpaca.
-    debug: bool = True,  # debug mode this put all other parameters to a really low value so that we can quickly figure out if the code is running proprely or not
+    debug: bool = False,
+    # debug mode this put all other parameters to a really low value so that we can quickly figure out if the code is running proprely or not
 ):
-
     if debug:
         batch_size = 2
         micro_batch_size = 1
@@ -84,10 +84,10 @@ def train(
             f"resume_from_checkpoint: {resume_from_checkpoint or False}\n"
             f"prompt template: {prompt_template_name}\n"
         )
+
     assert (
         base_model
     ), "Please specify a --base_model, e.g. --base_model='huggyllama/llama-7b'"
-
     gradient_accumulation_steps = batch_size // micro_batch_size
 
     prompter = Prompter(prompt_template_name)
@@ -112,10 +112,13 @@ def train(
         os.environ["WANDB_LOG_MODEL"] = wandb_log_model
 
     # Debugging model with smaller footprint
-    if debug:
+    if debug or base_model == 'debug_llama':
         # Debugging configuration for the Llama model, reduces parameters
+        # If a gpu is available the model will run on the gpu, otherwise cpu
+        device = 'cuda' if torch.cuda.is_available() else 'gpu'
         llama_config = low_footprint_config
-        model = LlamaForCausalLM(llama_config)
+        model = LlamaForCausalLM(llama_config).to(device)
+
     # Load pretrained model with default Llama configuration
     else:
         model = LlamaForCausalLM.from_pretrained(
@@ -127,7 +130,6 @@ def train(
         )
 
     tokenizer = LlamaTokenizer.from_pretrained(base_model)
-
     tokenizer.pad_token_id = 0  # unk. we want this to be different from the eos token
     tokenizer.padding_side = "left"  # Allow batched inference
 
@@ -271,6 +273,10 @@ def train(
 
     if torch.__version__ >= "2" and sys.platform != "win32":
         model = torch.compile(model)
+
+    # print('Device checks')
+    # print(model.device)
+    # print(trainer.args.no_cuda)
 
     trainer.train(resume_from_checkpoint=resume_from_checkpoint)
 
