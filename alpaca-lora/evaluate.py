@@ -34,39 +34,31 @@ def evaluate(
 
     prompter = Prompter(prompt_template)
     tokenizer = LlamaTokenizer.from_pretrained(base_model)
+    # Default configurations
+    llama_args = {
+        "torch_dtype": torch.float16,
+        "device_map": {"": device},
+    }
+    peft_args = {
+        "lora_weights": lora_weights,
+        "torch_dtype": torch.float16,
+        "device_map": {"": device},
+    }
+
+    # Conditional configurations
     if device == "cuda":
-        model = LlamaForCausalLM.from_pretrained(
-            base_model,
-            load_in_8bit=load_8bit,
-            torch_dtype=torch.float16,
-            device_map="auto",
-        )
-        model = PeftModel.from_pretrained(
-            model,
-            lora_weights,
-            torch_dtype=torch.float16,
-        )
+        llama_args.update({
+            "load_in_8bit": load_8bit,
+            "device_map": "auto"
+        })
     elif device == "mps":
-        model = LlamaForCausalLM.from_pretrained(
-            base_model,
-            device_map={"": device},
-            torch_dtype=torch.float16,
-        )
-        model = PeftModel.from_pretrained(
-            model,
-            lora_weights,
-            device_map={"": device},
-            torch_dtype=torch.float16,
-        )
+        pass  # No changes needed
     else:
-        model = LlamaForCausalLM.from_pretrained(
-            base_model, device_map={"": device}, low_cpu_mem_usage=True
-        )
-        model = PeftModel.from_pretrained(
-            model,
-            lora_weights,
-            device_map={"": device},
-        )
+        llama_args["low_cpu_mem_usage"] = True
+
+    # Instantiate models
+    model = LlamaForCausalLM.from_pretrained(base_model, **llama_args)
+    model = PeftModel.from_pretrained(model, **peft_args)
 
     # unwind broken decapoda-research config
     model.config.pad_token_id = tokenizer.pad_token_id = 0  # unk
