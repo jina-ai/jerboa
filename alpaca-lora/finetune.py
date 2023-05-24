@@ -14,6 +14,7 @@ from peft import (
     set_peft_model_state_dict,
 )
 from transformers import LlamaConfig, LlamaForCausalLM, LlamaTokenizer
+from utils.llama_config import low_footprint_config
 from utils.prompter import Prompter
 
 
@@ -113,13 +114,7 @@ def train(
     # Debugging model with smaller footprint
     if debug:
         # Debugging configuration for the Llama model, reduces parameters
-        llama_config = LlamaConfig(
-            hidden_size=4096,
-            intermediate_size=64,
-            num_hidden_layers=1,
-            num_attention_heads=1,
-        )
-
+        llama_config = low_footprint_config
         model = LlamaForCausalLM(llama_config)
     # Load pretrained model with default Llama configuration
     else:
@@ -218,7 +213,7 @@ def train(
         else:
             print(f"Checkpoint {checkpoint_name} not found")
 
-    # model.print_trainable_parameters()  # Be more transparent about the % of trainable params.
+    model.print_trainable_parameters()  # Be more transparent about the % of trainable params.
 
     if debug:
         train_data = data["train"].select(range(10)).map(generate_and_tokenize_prompt)
