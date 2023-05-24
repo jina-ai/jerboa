@@ -27,6 +27,7 @@ def main(
         lora_weights: str = "tloen/alpaca-lora-7b",
         prompt_template: str = "",
         eval_file: str = "",
+        eval_limit: int = 0, 
 ):
     base_model = base_model or os.environ.get("BASE_MODEL", "")
     assert (
@@ -120,9 +121,13 @@ def main(
             eval_data.append(json.loads(line))
 
     results = []
-    for eval_instance in eval_data:
-        results.append(list(evaluate(eval_instance["instruction"], eval_instance["input"])))
-
+    for i, eval_instance in enumerate(eval_data):
+        output = evaluate(eval_instance["instruction"], eval_instance["instances"][0]["input"])
+        if eval_limit != 0 and i == eval_limit:
+            break
+        results.append({"id":i, "instruction": eval_instance["instruction"], "input":eval_instance["instances"][0]["input"], "output":output, "to_compare": eval_instance["instances"][0]["output"]})
+        print(results)
+    return results
 
 if __name__ == "__main__":
     fire.Fire(main)
