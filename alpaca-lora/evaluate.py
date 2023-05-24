@@ -126,7 +126,6 @@ def main(
         if eval_limit != 0 and i == eval_limit:
             break
         results.append({"id":i, "instruction": eval_instance["instruction"], "input":eval_instance["instances"][0]["input"], "output":output, "to_compare": eval_instance["instances"][0]["output"]})
-        print(results)
     return results
 
 if __name__ == "__main__":
