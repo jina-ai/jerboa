@@ -1,4 +1,3 @@
-import os
 import json
 import sys
 
@@ -21,15 +20,14 @@ except:  # noqa: E722
     pass
 
 
-def main(
+def evaluate(
         load_8bit: bool = False,
         base_model: str = "",
         lora_weights: str = "tloen/alpaca-lora-7b",
         prompt_template: str = "",
         eval_file: str = "",
-        eval_limit: int = 0, 
+        eval_limit: int = 0,
 ):
-    base_model = base_model or os.environ.get("BASE_MODEL", "")
     assert (
         base_model
     ), "Please specify a --base_model, e.g. --base_model='huggyllama/llama-7b'"
@@ -125,8 +123,11 @@ def main(
         output = evaluate(eval_instance["instruction"], eval_instance["instances"][0]["input"])
         if eval_limit != 0 and i == eval_limit:
             break
-        results.append({"id":i, "instruction": eval_instance["instruction"], "input":eval_instance["instances"][0]["input"], "output":output, "to_compare": eval_instance["instances"][0]["output"]})
+        results.append(
+            {"id": i, "instruction": eval_instance["instruction"], "input": eval_instance["instances"][0]["input"],
+             "output": output, "to_compare": eval_instance["instances"][0]["output"]})
     return results
 
+
 if __name__ == "__main__":
-    fire.Fire(main)
+    fire.Fire(evaluate)
