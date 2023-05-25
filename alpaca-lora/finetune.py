@@ -57,6 +57,7 @@ def train(
     eval_file: str = "",  # path to file you want to evaluate on
     eval_limit: int = 0,  # limit the number of instructions to evaluate on
 ):
+    print('########################\nLOCAL_RANK:', os.environ.get("LOCAL_RANK", 0))
     if debug:
         batch_size = 2
         micro_batch_size = 1
