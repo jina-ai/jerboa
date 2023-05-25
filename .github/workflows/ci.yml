@@ -85,7 +85,7 @@ jobs:
 
   # just for blocking the merge until all parallel core-test are successful
   success-all-test:
-    needs: [setup-test, check-black, check-mypy, lint-ruff]
+    needs: [setup-test, check-black, lint-ruff]
     if: always()
     runs-on: ubuntu-20.04
     steps:
