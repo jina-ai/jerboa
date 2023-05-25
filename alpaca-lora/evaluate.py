@@ -118,7 +118,11 @@ def evaluate(
 
     results = []
     for i, eval_instance in enumerate(eval_data):
-        output = list(evaluate(eval_instance["instruction"], eval_instance["instances"][0]["input"]))[0]
+        output = list(
+            evaluate(
+                eval_instance["instruction"], eval_instance["instances"][0]["input"]
+            )
+        )[0]
         if eval_limit != 0 and i == eval_limit:
             break
         results.append(
