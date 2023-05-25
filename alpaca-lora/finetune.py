@@ -15,42 +15,46 @@ from peft import (
 )
 from transformers import LlamaForCausalLM, LlamaTokenizer
 from utils.prompter import Prompter
+import wandb
+from evaluate import evaluate
 
 
 def train(
-    # model/data params
-    base_model: str = "",  # the only required argument
-    data_path: str = "yahma/alpaca-cleaned",
-    output_dir: str = "./lora-alpaca",
-    # training hyperparams
-    batch_size: int = 128,
-    micro_batch_size: int = 4,
-    num_epochs: int = 3,
-    learning_rate: float = 3e-4,
-    cutoff_len: int = 256,
-    val_set_size: int = 2000,
-    # lora hyperparams
-    lora_r: int = 8,
-    lora_alpha: int = 16,
-    lora_dropout: float = 0.05,
-    lora_target_modules: List[str] = [
-        "q_proj",
-        "v_proj",
-    ],
-    # llm hyperparams
-    train_on_inputs: bool = True,  # if False, masks out inputs in loss
-    add_eos_token: bool = False,
-    group_by_length: bool = False,  # faster, but produces an odd training loss curve
-    # wandb params
-    wandb_project: str = "",
-    wandb_run_name: str = "",
-    wandb_watch: str = "",  # options: false | gradients | all
-    wandb_log_model: str = "",  # options: false | true
-    resume_from_checkpoint: str = None,  # either training checkpoint or final adapter
-    prompt_template_name: str = "alpaca",  # The prompt template to use, will default to alpaca.
-    debug: bool = True,  # debug mode this put all other parameters to a really low value so that we can quickly figure out if the code is running proprely or not
+        # model/data params
+        base_model: str = "",  # the only required argument
+        data_path: str = "yahma/alpaca-cleaned",
+        output_dir: str = "./lora-alpaca",
+        # training hyperparams
+        batch_size: int = 128,
+        micro_batch_size: int = 4,
+        num_epochs: int = 3,
+        learning_rate: float = 3e-4,
+        cutoff_len: int = 256,
+        val_set_size: int = 2000,
+        # lora hyperparams
+        lora_r: int = 8,
+        lora_alpha: int = 16,
+        lora_dropout: float = 0.05,
+        lora_target_modules: List[str] = [
+            "q_proj",
+            "v_proj",
+        ],
+        # llm hyperparams
+        train_on_inputs: bool = True,  # if False, masks out inputs in loss
+        add_eos_token: bool = False,
+        group_by_length: bool = False,  # faster, but produces an odd training loss curve
+        # wandb params
+        wandb_project: str = "",
+        wandb_run_name: str = "",
+        wandb_watch: str = "",  # options: false | gradients | all
+        wandb_log_model: str = "",  # options: false | true
+        resume_from_checkpoint: str = None,  # either training checkpoint or final adapter
+        prompt_template_name: str = "alpaca",  # The prompt template to use, will default to alpaca.
+        debug: bool = True,
+        # debug mode this put all other parameters to a really low value so that we can quickly figure out if the code is running proprely or not
+        eval_file: str = "",
+        eval_limit: int = 0,
 ):
-
     if debug:
         batch_size = 2
         micro_batch_size = 1
@@ -100,11 +104,12 @@ def train(
 
     # Check if parameter passed or if set within environ
     use_wandb = len(wandb_project) > 0 or (
-        "WANDB_PROJECT" in os.environ and len(os.environ["WANDB_PROJECT"]) > 0
+            "WANDB_PROJECT" in os.environ and len(os.environ["WANDB_PROJECT"]) > 0
     )
     # Only overwrite environ if wandb param passed
     if len(wandb_project) > 0:
         os.environ["WANDB_PROJECT"] = wandb_project
+        run = wandb.init(wandb_project)
     if len(wandb_watch) > 0:
         os.environ["WANDB_WATCH"] = wandb_watch
     if len(wandb_log_model) > 0:
@@ -133,9 +138,9 @@ def train(
             return_tensors=None,
         )
         if (
-            result["input_ids"][-1] != tokenizer.eos_token_id
-            and len(result["input_ids"]) < cutoff_len
-            and add_eos_token
+                result["input_ids"][-1] != tokenizer.eos_token_id
+                and len(result["input_ids"]) < cutoff_len
+                and add_eos_token
         ):
             result["input_ids"].append(tokenizer.eos_token_id)
             result["attention_mask"].append(1)
@@ -162,10 +167,10 @@ def train(
                 user_prompt_len -= 1
 
             tokenized_full_prompt["labels"] = [
-                -100
-            ] * user_prompt_len + tokenized_full_prompt["labels"][
-                user_prompt_len:
-            ]  # could be sped up, probably
+                                                  -100
+                                              ] * user_prompt_len + tokenized_full_prompt["labels"][
+                                                                    user_prompt_len:
+                                                                    ]  # could be sped up, probably
         return tokenized_full_prompt
 
     model = prepare_model_for_int8_training(model)
@@ -190,6 +195,8 @@ def train(
         checkpoint_name = os.path.join(
             resume_from_checkpoint, "pytorch_model.bin"
         )  # Full checkpoint
+        if len(wandb_project) > 0:
+            run = wandb.init(wandb_project, resume="allow")
         if not os.path.exists(checkpoint_name):
             checkpoint_name = os.path.join(
                 resume_from_checkpoint, "adapter_model.bin"
@@ -265,6 +272,11 @@ def train(
     trainer.train(resume_from_checkpoint=resume_from_checkpoint)
 
     model.save_pretrained(output_dir)
+    if len(wandb_project) > 0 and eval_file:
+        results = evaluate(base_model=output_dir, eval_file=eval_file,
+                           eval_limit=eval_limit)
+        eval_table = wandb.Table(results)
+        wandb.log(run.log({"Evaluation": eval_table}))
 
     print("\n If there's a warning about missing keys above, please disregard :)")
 
