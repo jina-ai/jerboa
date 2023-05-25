@@ -52,7 +52,8 @@ def train(
     resume_from_checkpoint: str = None,  # either training checkpoint or final adapter
     prompt_template_name: str = "alpaca",  # The prompt template to use, will default to alpaca.
     debug: bool = False,
-    # debug mode this put all other parameters to a really low value so that we can quickly figure out if the code is running proprely or not
+    # debug mode this put all other parameters to a really low value so that we can quickly figure out if the code is
+    # running proprely or not
     eval_file: str = "",  # path to file you want to evaluate on
     eval_limit: int = 0,  # limit the number of instructions to evaluate on
 ):
@@ -111,9 +112,12 @@ def train(
     if len(wandb_project) > 0:
         os.environ["WANDB_PROJECT"] = wandb_project
         run = wandb.init(wandb_project)
-        eval_table = wandb.Table(
-            columns=list(params_dict.keys()), data=list(params_dict.values())
-        )
+        table_columns = []
+        table_data = []
+        for key, value in params_dict.items():
+            table_columns.append(key)
+            table_data.append(value)
+        eval_table = wandb.Table(columns=table_columns, data=table_data)
         run.log({"params": eval_table})
     if len(wandb_watch) > 0:
         os.environ["WANDB_WATCH"] = wandb_watch
