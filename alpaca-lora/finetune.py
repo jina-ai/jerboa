@@ -13,7 +13,8 @@ from peft import (
     prepare_model_for_int8_training,
     set_peft_model_state_dict,
 )
-from transformers import LlamaForCausalLM, LlamaTokenizer
+from transformers import LlamaConfig, LlamaForCausalLM, LlamaTokenizer
+from utils.llama_config import low_footprint_config
 from utils.prompter import Prompter
 
 
@@ -48,9 +49,9 @@ def train(
     wandb_log_model: str = "",  # options: false | true
     resume_from_checkpoint: str = None,  # either training checkpoint or final adapter
     prompt_template_name: str = "alpaca",  # The prompt template to use, will default to alpaca.
-    debug: bool = True,  # debug mode this put all other parameters to a really low value so that we can quickly figure out if the code is running proprely or not
+    debug: bool = False,
+    # debug mode this put all other parameters to a really low value so that we can quickly figure out if the code is running proprely or not
 ):
-
     if debug:
         batch_size = 2
         micro_batch_size = 1
@@ -83,10 +84,10 @@ def train(
             f"resume_from_checkpoint: {resume_from_checkpoint or False}\n"
             f"prompt template: {prompt_template_name}\n"
         )
+
     assert (
         base_model
     ), "Please specify a --base_model, e.g. --base_model='huggyllama/llama-7b'"
-
     gradient_accumulation_steps = batch_size // micro_batch_size
 
     prompter = Prompter(prompt_template_name)
@@ -110,15 +111,25 @@ def train(
     if len(wandb_log_model) > 0:
         os.environ["WANDB_LOG_MODEL"] = wandb_log_model
 
-    model = LlamaForCausalLM.from_pretrained(
-        base_model,
-        load_in_8bit=True,
-        torch_dtype=torch.float16,
-        device_map=device_map,
-    )
+    # Debugging model with smaller footprint
+    if debug or base_model == 'debug_llama':
+        # Debugging configuration for the Llama model, reduces parameters
+        # If a gpu is available the model will run on the gpu, otherwise cpu
+        device = 'cuda' if torch.cuda.is_available() else 'cpu'
+        llama_config = low_footprint_config
+        model = LlamaForCausalLM(llama_config).to(device)
+
+    # Load pretrained model with default Llama configuration
+    else:
+        model = LlamaForCausalLM.from_pretrained(
+            base_model,
+            load_in_8bit=True,
+            torch_dtype=torch.float16,
+            device_map=device_map,
+            config=LlamaConfig(),
+        )
 
     tokenizer = LlamaTokenizer.from_pretrained(base_model)
-
     tokenizer.pad_token_id = 0  # unk. we want this to be different from the eos token
     tokenizer.padding_side = "left"  # Allow batched inference
 
@@ -178,6 +189,7 @@ def train(
         bias="none",
         task_type="CAUSAL_LM",
     )
+
     model = get_peft_model(model, config)
 
     if data_path.endswith(".json") or data_path.endswith(".jsonl"):
@@ -233,7 +245,7 @@ def train(
             warmup_steps=100,
             num_train_epochs=num_epochs,
             learning_rate=learning_rate,
-            fp16=True,
+            fp16=not debug,
             logging_steps=10,
             optim="adamw_torch",
             evaluation_strategy="steps" if val_set_size > 0 else "no",
