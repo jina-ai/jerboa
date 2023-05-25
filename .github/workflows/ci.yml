@@ -79,7 +79,8 @@ jobs:
       - name: Test
         id: test
         run: |
-          poetry run pytest ./alpaca-lora/test_finetune.py
+          cd alpaca-lora
+          poetry run pytest test_finetune.py
         timeout-minutes: 30
         env:
           JINA_AUTH_TOKEN: "${{ secrets.JINA_AUTH_TOKEN }}"
