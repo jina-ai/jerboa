@@ -59,7 +59,6 @@ def train(
     if debug:
         batch_size = 2
         micro_batch_size = 1
-        wandb_project = ""
         num_epochs = 1
 
     if int(os.environ.get("LOCAL_RANK", 0)) == 0:
@@ -112,7 +111,10 @@ def train(
     if len(wandb_project) > 0:
         os.environ["WANDB_PROJECT"] = wandb_project
         run = wandb.init(wandb_project)
-        run.log(columns=list(params_dict.keys()), data=list(params_dict.values()))
+        eval_table = wandb.Table(
+            columns=list(params_dict.keys()), data=list(params_dict.values())
+        )
+        run.log({"params": eval_table})
     if len(wandb_watch) > 0:
         os.environ["WANDB_WATCH"] = wandb_watch
     if len(wandb_log_model) > 0:
