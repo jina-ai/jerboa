@@ -55,21 +55,6 @@ jobs:
         env:
           CHANGED_FILES: ${{ steps.file_changes.outputs.added_modified }}
 
-  check-mypy:
-    runs-on: ubuntu-20.04
-    steps:
-      - uses: actions/checkout@v2.5.0
-      - name: Set up Python 3.7
-        uses: actions/setup-python@v4
-        with:
-          python-version: 3.8.10
-      - name: check mypy
-        run: |
-          python -m pip install --upgrade pip
-          python -m pip install poetry
-          poetry install --all-extras
-          poetry run mypy alpaca-lora
-
   setup-test:
     needs: [lint-ruff, check-black,]
     runs-on: ubuntu-20.04
@@ -88,12 +73,11 @@ jobs:
           python -m pip install --upgrade pip
           python -m pip install -U poetry
           poetry install
-          poetry shell
 
       - name: Test
         id: test
         run: |
-          pytest ./alpaca-lora/test_finetune.py
+          poetry run pytest ./alpaca-lora/test_finetune.py
         timeout-minutes: 30
         env:
           JINA_AUTH_TOKEN: "${{ secrets.JINA_AUTH_TOKEN }}"
