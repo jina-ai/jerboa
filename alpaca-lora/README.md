@@ -32,13 +32,13 @@ It is possible to train the model on multiple GPUs. This allows to train the mod
 Training on 2x3090 GPUs: 
 
 ```bash
-WORLD_SIZE=2 CUDA_VISIBLE_DEVICES=0,1 torchrun --nproc_per_node=2 --master_port=1234 finetune.py --base_model 'decapoda-research/llama-7b-hf' --output_dir './lora-alpaca' --num_epochs 3 --batch_size 128 --micro_batch_size 6
+WORLD_SIZE=2 CUDA_VISIBLE_DEVICES=0,1 torchrun --nproc_per_node=2 --master_port=1234 finetune.py --base_model 'decapoda-research/llama-7b-hf' --output_dir './lora-alpaca' --num_epochs 3 --batch_size 128 --micro_batch_size 4
 ```
 
 Training on 3x3090 GPUs: 
 
 ```bash
-WORLD_SIZE=2 CUDA_VISIBLE_DEVICES=0,1,2 torchrun --nproc_per_node=3 --master_port=1234 finetune.py --base_model 'decapoda-research/llama-7b-hf' --output_dir './lora-alpaca' --num_epochs 3 --batch_size 128 --micro_batch_size 6
+WORLD_SIZE=2 CUDA_VISIBLE_DEVICES=0,1,2 torchrun --nproc_per_node=3 --master_port=1234 finetune.py --base_model 'decapoda-research/llama-7b-hf' --output_dir './lora-alpaca' --num_epochs 3 --batch_size 128 --micro_batch_size 4
 ```
 
 # 🦙🌲🤏 Alpaca-LoRA
