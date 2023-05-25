@@ -5,7 +5,9 @@ from typing import List
 import fire
 import torch
 import transformers
+import wandb
 from datasets import load_dataset
+from evaluate import evaluate
 from peft import (
     LoraConfig,
     get_peft_model,
@@ -50,40 +52,43 @@ def train(
     resume_from_checkpoint: str = None,  # either training checkpoint or final adapter
     prompt_template_name: str = "alpaca",  # The prompt template to use, will default to alpaca.
     debug: bool = False,
-    # debug mode this put all other parameters to a really low value so that we can quickly figure out if the code is running proprely or not
+    # debug mode this put all other parameters to a really low value so that we can quickly figure out if the code is
+    # running proprely or not
+    eval_file: str = "",  # path to file you want to evaluate on
+    eval_limit: int = 0,  # limit the number of instructions to evaluate on
 ):
     if debug:
         batch_size = 2
         micro_batch_size = 1
-        wandb_project = ""
         num_epochs = 1
 
     if int(os.environ.get("LOCAL_RANK", 0)) == 0:
-        print(
-            f"Training Alpaca-LoRA model with params:\n"
-            f"base_model: {base_model}\n"
-            f"data_path: {data_path}\n"
-            f"output_dir: {output_dir}\n"
-            f"batch_size: {batch_size}\n"
-            f"micro_batch_size: {micro_batch_size}\n"
-            f"num_epochs: {num_epochs}\n"
-            f"learning_rate: {learning_rate}\n"
-            f"cutoff_len: {cutoff_len}\n"
-            f"val_set_size: {val_set_size}\n"
-            f"lora_r: {lora_r}\n"
-            f"lora_alpha: {lora_alpha}\n"
-            f"lora_dropout: {lora_dropout}\n"
-            f"lora_target_modules: {lora_target_modules}\n"
-            f"train_on_inputs: {train_on_inputs}\n"
-            f"add_eos_token: {add_eos_token}\n"
-            f"group_by_length: {group_by_length}\n"
-            f"wandb_project: {wandb_project}\n"
-            f"wandb_run_name: {wandb_run_name}\n"
-            f"wandb_watch: {wandb_watch}\n"
-            f"wandb_log_model: {wandb_log_model}\n"
-            f"resume_from_checkpoint: {resume_from_checkpoint or False}\n"
-            f"prompt template: {prompt_template_name}\n"
-        )
+        params_dict = {
+            "base_model": base_model,
+            "data_path": data_path,
+            "output_dir": output_dir,
+            "batch_size": batch_size,
+            "micro_batch_size": micro_batch_size,
+            "num_epochs": num_epochs,
+            "learning_rate": learning_rate,
+            "cutoff_len": cutoff_len,
+            "val_set_size": val_set_size,
+            "lora_r": lora_r,
+            "lora_alpha": lora_alpha,
+            "lora_dropout": lora_dropout,
+            "lora_target_modules": lora_target_modules,
+            "train_on_inputs": train_on_inputs,
+            "add_eos_token": add_eos_token,
+            "group_by_length": group_by_length,
+            "wandb_project": wandb_project,
+            "wandb_run_name": wandb_run_name,
+            "wandb_watch": wandb_watch,
+            "wandb_log_model": wandb_log_model,
+            "resume_from_checkpoint": resume_from_checkpoint or False,
+            "prompt template": prompt_template_name,
+        }
+
+        print("Training Alpaca-LoRA model with params:", params_dict)
 
     assert (
         base_model
@@ -106,6 +111,7 @@ def train(
     # Only overwrite environ if wandb param passed
     if len(wandb_project) > 0:
         os.environ["WANDB_PROJECT"] = wandb_project
+        run = wandb.init(wandb_project)
     if len(wandb_watch) > 0:
         os.environ["WANDB_WATCH"] = wandb_watch
     if len(wandb_log_model) > 0:
@@ -130,6 +136,7 @@ def train(
         )
 
     tokenizer = LlamaTokenizer.from_pretrained(base_model)
+
     tokenizer.pad_token_id = 0  # unk. we want this to be different from the eos token
     tokenizer.padding_side = "left"  # Allow batched inference
 
@@ -202,6 +209,8 @@ def train(
         checkpoint_name = os.path.join(
             resume_from_checkpoint, "pytorch_model.bin"
         )  # Full checkpoint
+        if len(wandb_project) > 0:
+            run = wandb.init(wandb_project, resume="allow")
         if not os.path.exists(checkpoint_name):
             checkpoint_name = os.path.join(
                 resume_from_checkpoint, "adapter_model.bin"
@@ -277,6 +286,17 @@ def train(
     trainer.train(resume_from_checkpoint=resume_from_checkpoint)
 
     model.save_pretrained(output_dir)
+    if len(wandb_project) > 0 and eval_file:
+        results = evaluate(
+            base_model=base_model,
+            lora_weights=output_dir,
+            eval_file=eval_file,
+            eval_limit=eval_limit,
+        )
+        columns = list(results[0].keys())
+        results_data = [[d[key] for key in columns] for d in results]
+        eval_table = wandb.Table(columns=columns, data=results_data)
+        run.log({"Evaluation": eval_table})
 
     print("\n If there's a warning about missing keys above, please disregard :)")
 
