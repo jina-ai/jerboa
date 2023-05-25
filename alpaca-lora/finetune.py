@@ -112,13 +112,6 @@ def train(
     if len(wandb_project) > 0:
         os.environ["WANDB_PROJECT"] = wandb_project
         run = wandb.init(wandb_project)
-        table_columns = []
-        table_data = []
-        for key, value in params_dict.items():
-            table_columns.append(key)
-            table_data.append(value)
-        eval_table = wandb.Table(columns=table_columns, data=table_data)
-        run.log({"params": eval_table})
     if len(wandb_watch) > 0:
         os.environ["WANDB_WATCH"] = wandb_watch
     if len(wandb_log_model) > 0:
