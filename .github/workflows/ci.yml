@@ -21,7 +21,7 @@ jobs:
   lint-ruff:
     runs-on: ubuntu-20.04
     steps:
-      - uses: actions/checkout@v2.5.0
+      - uses: actions/checkout@v3
       - name: Set up Python 3.8.10
         uses: actions/setup-python@v4
         with:
@@ -40,7 +40,7 @@ jobs:
   check-black:
     runs-on: ubuntu-20.04
     steps:
-      - uses: actions/checkout@v2.5.0
+      - uses: actions/checkout@v3
       - name: Set up Python 3.8.10
         uses: actions/setup-python@v4
         with:
@@ -63,7 +63,7 @@ jobs:
       matrix:
         python-version: [3.8.10]
     steps:
-      - uses: actions/checkout@v2.5.0
+      - uses: actions/checkout@v3
       - name: Set up Python ${{ matrix.python-version }}
         uses: actions/setup-python@v4
         with:
@@ -73,6 +73,7 @@ jobs:
           python -m pip install --upgrade pip
           python -m pip install -U poetry
           poetry install
+          python -m pip install torch
 
       - name: Test
         id: test
