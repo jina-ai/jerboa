@@ -11,3 +11,9 @@ Prompter class, a template manager.
 Helpers to support streaming generate output.
 
 `from utils.callbacks import Iteratorize, Stream`
+
+## llama_config.py
+
+Configurations for the Llama model
+
+`from utils.llama_config import low_footprint_config`
