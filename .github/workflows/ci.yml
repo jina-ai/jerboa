@@ -19,13 +19,13 @@ on:
 jobs:
 
   lint-ruff:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     steps:
       - uses: actions/checkout@v2.5.0
       - name: Set up Python 3.8.10
         uses: actions/setup-python@v4
         with:
-          python-version: 3.7
+          python-version: 3.8.10
       - name: Lint with ruff
         run: |
           python -m pip install --upgrade pip
@@ -38,13 +38,13 @@ jobs:
           poetry run ruff alpaca-lora
 
   check-black:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     steps:
       - uses: actions/checkout@v2.5.0
       - name: Set up Python 3.8.10
         uses: actions/setup-python@v4
         with:
-          python-version: 3.7
+          python-version: 3.8.10
       - name: check black
         run: |
           python -m pip install --upgrade pip
@@ -56,7 +56,7 @@ jobs:
           CHANGED_FILES: ${{ steps.file_changes.outputs.added_modified }}
 
   check-mypy:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     steps:
       - uses: actions/checkout@v2.5.0
       - name: Set up Python 3.7
@@ -72,11 +72,11 @@ jobs:
 
   setup-test:
     needs: [lint-ruff, check-black,]
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     strategy:
       fail-fast: false
       matrix:
-        python-version: [3.7]
+        python-version: [3.8.10]
     steps:
       - uses: actions/checkout@v2.5.0
       - name: Set up Python ${{ matrix.python-version }}
@@ -103,7 +103,7 @@ jobs:
   success-all-test:
     needs: [setup-test, check-black, check-mypy, lint-ruff]
     if: always()
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     steps:
       - uses: technote-space/workflow-conclusion-action@v2
       - name: Check Failure
