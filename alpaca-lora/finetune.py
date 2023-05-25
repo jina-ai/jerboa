@@ -58,7 +58,7 @@ def train(
     if debug:
         batch_size = 2
         micro_batch_size = 1
-        wandb_project = ""
+#        wandb_project = ""
         num_epochs = 1
 
     if int(os.environ.get("LOCAL_RANK", 0)) == 0:
@@ -273,10 +273,12 @@ def train(
 
     model.save_pretrained(output_dir)
     if len(wandb_project) > 0 and eval_file:
-        results = evaluate(base_model=output_dir, eval_file=eval_file,
+        results = evaluate(base_model=base_model, lora_weights=output_dir, eval_file=eval_file,
                            eval_limit=eval_limit)
-        eval_table = wandb.Table(results)
-        wandb.log(run.log({"Evaluation": eval_table}))
+        columns = list(results[0].keys())
+        results_data = [[d[key] for key in columns] for d in results] 
+        eval_table = wandb.Table(columns=columns, data=results_data)
+        run.log({"Evaluation": eval_table})
 
     print("\n If there's a warning about missing keys above, please disregard :)")
 
