@@ -10,53 +10,48 @@ on:
         required: false
   pull_request:
     types: [opened, synchronize, reopened]
-  # Just for testing, remove once pr is opened  
-  push:
-    branches:
-      - 'feat-set-up-ci'
-
 
 jobs:
 
-#  lint-ruff:
-#    runs-on: ubuntu-20.04
-#    steps:
-#      - uses: actions/checkout@v3
-#      - name: Set up Python 3.8.10
-#        uses: actions/setup-python@v4
-#        with:
-#          python-version: 3.8.10
-#      - name: Lint with ruff
-#        run: |
-#          python -m pip install --upgrade pip
-#          python -m pip install poetry
-#          poetry install
-#
-#          # stop the build if there are Python syntax errors or undefined names
-#          poetry run ruff alpaca-lora
-#          # exit-zero treats all errors as warnings. The GitHub editor is 127 chars wide
-#          poetry run ruff alpaca-lora
+  lint-ruff:
+    runs-on: ubuntu-20.04
+    steps:
+      - uses: actions/checkout@v3
+      - name: Set up Python 3.8.10
+        uses: actions/setup-python@v4
+        with:
+          python-version: 3.8.10
+      - name: Lint with ruff
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install poetry
+          poetry install
 
-#  check-black:
-#    runs-on: ubuntu-20.04
-#    steps:
-#      - uses: actions/checkout@v3
-#      - name: Set up Python 3.8.10
-#        uses: actions/setup-python@v4
-#        with:
-#          python-version: 3.8.10
-#      - name: check black
-#        run: |
-#          python -m pip install --upgrade pip
-#          python -m pip install poetry
-#          poetry install --only dev
-#          poetry run black --check .
-#
-#        env:
-#          CHANGED_FILES: ${{ steps.file_changes.outputs.added_modified }}
+          # stop the build if there are Python syntax errors or undefined names
+          poetry run ruff alpaca-lora
+          # exit-zero treats all errors as warnings. The GitHub editor is 127 chars wide
+          poetry run ruff alpaca-lora
+
+  check-black:
+    runs-on: ubuntu-20.04
+    steps:
+      - uses: actions/checkout@v3
+      - name: Set up Python 3.8.10
+        uses: actions/setup-python@v4
+        with:
+          python-version: 3.8.10
+      - name: check black
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install poetry
+          poetry install --only dev
+          poetry run black --check .
+
+        env:
+          CHANGED_FILES: ${{ steps.file_changes.outputs.added_modified }}
 
   setup-test:
-#    needs: [lint-ruff, check-black,]
+    needs: [lint-ruff, check-black,]
     runs-on: ubuntu-20.04
     strategy:
       fail-fast: false
@@ -85,16 +80,16 @@ jobs:
           JINA_AUTH_TOKEN: "${{ secrets.JINA_AUTH_TOKEN }}"
 
 
-  # just for blocking the merge until all parallel core-test are successful
-#  success-all-test:
-#    needs: [setup-test, check-black, lint-ruff]
-#    if: always()
-#    runs-on: ubuntu-20.04
-#    steps:
-#      - uses: technote-space/workflow-conclusion-action@v2
-#      - name: Check Failure
-#        if: env.WORKFLOW_CONCLUSION == 'failure'
-#        run: exit 1
-#      - name: Success
-#        if: ${{ success() }}
-#        run: echo "All Done"
+# just for blocking the merge until all parallel core-test are successful
+  success-all-test:
+    needs: [setup-test, check-black, lint-ruff]
+    if: always()
+    runs-on: ubuntu-20.04
+    steps:
+      - uses: technote-space/workflow-conclusion-action@v2
+      - name: Check Failure
+        if: env.WORKFLOW_CONCLUSION == 'failure'
+        run: exit 1
+      - name: Success
+        if: ${{ success() }}
+        run: echo "All Done"
