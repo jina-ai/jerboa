@@ -48,7 +48,7 @@ def train(
     wandb_log_model: str = "",  # options: false | true
     resume_from_checkpoint: str = None,  # either training checkpoint or final adapter
     prompt_template_name: str = "alpaca",  # The prompt template to use, will default to alpaca.
-    debug: bool = True,  # debug mode this put all other parameters to a really low value so that we can quickly figure out if the code is running proprely or not
+    debug: bool = False,  # debug mode this put all other parameters to a really low value so that we can quickly figure out if the code is running proprely or not
 ):
 
     if debug:
@@ -62,6 +62,7 @@ def train(
             f"Training Alpaca-LoRA model with params:\n"
             f"base_model: {base_model}\n"
             f"data_path: {data_path}\n"
+            f"debug: {debug}\n"
             f"output_dir: {output_dir}\n"
             f"batch_size: {batch_size}\n"
             f"micro_batch_size: {micro_batch_size}\n"
