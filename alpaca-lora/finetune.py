@@ -66,6 +66,7 @@ def train(
         params_dict = {
             "base_model": base_model,
             "data_path": data_path,
+            f"debug: {debug}\n"
             "output_dir": output_dir,
             "batch_size": batch_size,
             "micro_batch_size": micro_batch_size,

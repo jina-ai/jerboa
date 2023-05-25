@@ -27,6 +27,20 @@ CUDA_VISIBLE_DEVICES=0 pytest test_finetune.py
 
 this should take a couple of second to run on a singe 3090. Just doing one epoch over 100 data points
 
+## Distributed training
+It is possible to train the model on multiple GPUs. This allows to train the model faster.
+Training on 2x3090 GPUs: 
+
+```bash
+WORLD_SIZE=2 CUDA_VISIBLE_DEVICES=0,1 torchrun --nproc_per_node=2 --master_port=1234 finetune.py --base_model 'decapoda-research/llama-7b-hf' --output_dir './lora-alpaca' --num_epochs 3 --batch_size 128 --micro_batch_size 4
+```
+
+Training on 3x3090 GPUs: 
+
+```bash
+WORLD_SIZE=2 CUDA_VISIBLE_DEVICES=0,1,2 torchrun --nproc_per_node=3 --master_port=1234 finetune.py --base_model 'decapoda-research/llama-7b-hf' --output_dir './lora-alpaca' --num_epochs 3 --batch_size 128 --micro_batch_size 4
+```
+
 # 🦙🌲🤏 Alpaca-LoRA
 
 - 🤗 **Try the pretrained model out [here](https://huggingface.co/spaces/tloen/alpaca-lora), courtesy of a GPU grant from Huggingface!**
