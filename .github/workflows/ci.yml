@@ -15,7 +15,6 @@ on:
       - feat-set-up-ci
 
 jobs:
-
   lint-ruff:
     runs-on: ubuntu-20.04
     steps:
@@ -52,7 +51,7 @@ jobs:
 
         env:
           CHANGED_FILES: ${{ steps.file_changes.outputs.added_modified }}
-
+# run all tests
   setup-test:
     needs: [lint-ruff, check-black,]
     runs-on: ubuntu-20.04
