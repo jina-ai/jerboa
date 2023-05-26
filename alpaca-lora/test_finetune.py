@@ -16,6 +16,7 @@ def test_eval():
         base_model='decapoda-research/llama-7b-hf',
         eval_file='resources/eval_sample.jsonl',
         eval_limit=2,
+        debug=True,
     )
     assert len(results) == 2
     for res in results:

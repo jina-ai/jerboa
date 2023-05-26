@@ -2,31 +2,26 @@ import json
 import sys
 
 import fire
-
-from utils.prompter import Prompter
 import torch
 from peft import PeftModel
-from transformers import LlamaForCausalLM, LlamaTokenizer, GenerationConfig
+from transformers import GenerationConfig, LlamaForCausalLM, LlamaTokenizer
+from utils.llama_config import low_footprint_config
+from utils.prompter import Prompter
 
 if torch.cuda.is_available():
     device = "cuda"
 else:
     device = "cpu"
 
-try:
-    if torch.backends.mps.is_available():
-        device = "mps"
-except:  # noqa: E722
-    pass
-
 
 def evaluate(
-        load_8bit: bool = False,
-        base_model: str = "",
-        lora_weights: str = "tloen/alpaca-lora-7b",
-        prompt_template: str = "",
-        eval_file: str = "",
-        eval_limit: int = 0,
+    load_8bit: bool = False,
+    base_model: str = "",
+    lora_weights: str = "tloen/alpaca-lora-7b",
+    prompt_template: str = "",
+    eval_file: str = "",
+    eval_limit: int = 0,
+    debug: bool = False,
 ):
     assert (
         base_model
@@ -36,28 +31,33 @@ def evaluate(
     tokenizer = LlamaTokenizer.from_pretrained(base_model)
     # Default configurations
     llama_args = {
-        "torch_dtype": torch.float16,
+        "torch_dtype": torch.float16 if device == "cuda" else torch.float32,
         "device_map": {"": device},
     }
     peft_args = {
         "model_id": lora_weights,
-        "torch_dtype": torch.float16,
+        "torch_dtype": torch.float16 if device == "cuda" else torch.float32,
         "device_map": {"": device},
     }
 
     # Conditional configurations
     if device == "cuda":
-        llama_args.update({
-            "load_in_8bit": load_8bit,
-            "device_map": "auto"
-        })
+        llama_args.update({"load_in_8bit": load_8bit, "device_map": "auto"})
     elif device == "mps":
         pass  # No changes needed
     else:
         llama_args["low_cpu_mem_usage"] = True
 
     # Instantiate models
-    model = LlamaForCausalLM.from_pretrained(base_model, **llama_args)
+    if debug or base_model == 'debug_llama':
+        # Debugging configuration for the Llama model, reduces parameters
+        # If a gpu is available the model will run on the gpu, otherwise cpu
+        # device = 'cuda' if torch.cuda.is_available() else 'cpu'
+        llama_config = low_footprint_config
+        model = LlamaForCausalLM(llama_config).to(device)
+    else:
+        model = LlamaForCausalLM.from_pretrained(base_model, **llama_args)
+
     model = PeftModel.from_pretrained(model, **peft_args)
 
     # unwind broken decapoda-research config
@@ -65,7 +65,8 @@ def evaluate(
     model.config.bos_token_id = 1
     model.config.eos_token_id = 2
 
-    if not load_8bit:
+    # floatt16 only available on gpu, do not half model for cpu
+    if not load_8bit and device == "cuda":
         model.half()  # seems to fix bugs for some users.
 
     model.eval()
@@ -73,14 +74,14 @@ def evaluate(
         model = torch.compile(model)
 
     def evaluate(
-            instruction,
-            input=None,
-            temperature=0.1,
-            top_p=0.75,
-            top_k=40,
-            num_beams=4,
-            max_new_tokens=128,
-            **kwargs,
+        instruction,
+        input=None,
+        temperature=0.1,
+        top_p=0.75,
+        top_k=40,
+        num_beams=4,
+        max_new_tokens=128,
+        **kwargs,
     ):
         prompt = prompter.generate_prompt(instruction, input)
         inputs = tokenizer(prompt, return_tensors="pt")
@@ -112,12 +113,22 @@ def evaluate(
 
     results = []
     for i, eval_instance in enumerate(eval_data):
-        output = list(evaluate(eval_instance["instruction"], eval_instance["instances"][0]["input"]))[0]
+        output = list(
+            evaluate(
+                eval_instance["instruction"], eval_instance["instances"][0]["input"]
+            )
+        )[0]
         if eval_limit != 0 and i == eval_limit:
             break
         results.append(
-            {"id": i, "instruction": eval_instance["instruction"], "input": eval_instance["instances"][0]["input"],
-             "output": output, "to_compare": eval_instance["instances"][0]["output"]})
+            {
+                "id": i,
+                "instruction": eval_instance["instruction"],
+                "input": eval_instance["instances"][0]["input"],
+                "output": output,
+                "to_compare": eval_instance["instances"][0]["output"],
+            }
+        )
     return results
 
 
