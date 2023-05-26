@@ -11,14 +11,25 @@ the rest of this readme is the original README from the repo.
 
 !!! To follow the rest be sure to have enabled your virtual env with poetry by looking at the top root README.md 
 
-We can run the code in debug mode, this allows to test the code with low resource
+
+### debug mode
+
+We can run the code in debug mode, this allows to test the code with low resource (small model and small dataset)
 
 ```bash
-CUDA_VISIBLE_DEVICES=0 python finetune.py     --base_model 'decapoda-research/llama-7b-hf'     --output_dir './lora-alpaca' --debug
+CUDA_VISIBLE_DEVICES=0 python finetune.py --debug
 ```
 
+this still use wandb. If you want to disable wandb you can do
 
-There is one integration than do this:
+```bash
+CUDA_VISIBLE_DEVICES=0 python finetune.py --debug --use-wandb=False
+```
+
+## Tests
+
+You can run our tests by doing
+
 
 ```bash
 CUDA_VISIBLE_DEVICES=0 pytest test_finetune.py
