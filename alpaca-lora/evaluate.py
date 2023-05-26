@@ -13,11 +13,11 @@ if torch.cuda.is_available():
 else:
     device = "cpu"
 
-try:
-    if torch.backends.mps.is_available():
-        device = "mps"
-except:  # noqa: E722
-    pass
+# try:
+#     if torch.backends.mps.is_available():
+#         device = "mps"
+# except:  # noqa: E722
+#     pass
 
 
 def evaluate(
@@ -37,12 +37,12 @@ def evaluate(
     tokenizer = LlamaTokenizer.from_pretrained(base_model)
     # Default configurations
     llama_args = {
-        "torch_dtype": torch.float16,
+        "torch_dtype": torch.float16 if device == "cuda" else torch.float32,
         "device_map": {"": device},
     }
     peft_args = {
         "model_id": lora_weights,
-        "torch_dtype": torch.float16,
+        "torch_dtype": torch.float16 if device == "cuda" else torch.float32,
         "device_map": {"": device},
     }
 
