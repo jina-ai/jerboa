@@ -25,7 +25,7 @@ def evaluate(
         load_8bit: bool = False,
         base_model: str = "huggyllama/llama-7b",
         lora_weights: str = "tloen/alpaca-lora-7b",
-        model: Optional[torch.Module] = None,
+        model: Optional[torch.nn.Module] = None,
         tokenizer: Optional[PreTrainedTokenizer] = None,
         prompt_template: str = "",
         eval_file: str = "",
