@@ -1,6 +1,6 @@
 import os
 import sys
-from typing import List, Optional
+from typing import List, Optional, Tuple
 
 import fire
 import torch
@@ -10,6 +10,7 @@ from datasets import load_dataset
 from evaluate import evaluate
 from peft import (
     LoraConfig,
+    PeftModel,
     get_peft_model,
     get_peft_model_state_dict,
     prepare_model_for_int8_training,
@@ -18,6 +19,59 @@ from peft import (
 from transformers import LlamaConfig, LlamaForCausalLM, LlamaTokenizer
 from utils.llama_config import low_footprint_config
 from utils.prompter import Prompter
+
+
+def load_model_tokenizer(
+    base_model: str = "huggyllama/llama-7b",
+    lora_weights: str = "tloen/alpaca-lora-7b",
+    load_8bit: bool = False,
+    debug: bool = False,
+    device: str = 'cuda',
+) -> Tuple[torch.nn.Module, transformers.PreTrainedTokenizer]:
+    assert (
+        base_model
+    ), "Please specify a --base_model or model, e.g. --base_model='huggyllama/llama-7b'"
+    tokenizer = LlamaTokenizer.from_pretrained(base_model)
+
+    llama_args = {
+        "torch_dtype": torch.float16 if device == "cuda" else torch.float32,
+        "device_map": {"": device},
+    }
+    peft_args = {
+        "model_id": lora_weights,
+        "torch_dtype": torch.float16 if device == "cuda" else torch.float32,
+        "device_map": {"": device},
+    }
+
+    # Conditional configurations
+    if device == "cuda":
+        llama_args.update({"load_in_8bit": load_8bit, "device_map": "auto"})
+    elif device == "mps":
+        pass  # No changes needed
+    else:
+        llama_args["low_cpu_mem_usage"] = True
+
+    # Instantiate models
+    if debug or base_model == 'debug_llama':
+        # Debugging configuration for the Llama model, reduces parameters
+        # If a gpu is available the model will run on the gpu, otherwise cpu
+        # device = 'cuda' if torch.cuda.is_available() else 'cpu'
+        llama_config = low_footprint_config
+        model = LlamaForCausalLM(llama_config).to(device)
+    else:
+        model = LlamaForCausalLM.from_pretrained(base_model, **llama_args)
+
+    model = PeftModel.from_pretrained(model, **peft_args)
+
+    # unwind broken decapoda-research config
+    model.config.pad_token_id = tokenizer.pad_token_id = 0  # unk
+    model.config.bos_token_id = 1
+    model.config.eos_token_id = 2
+
+    if not load_8bit and device == "cuda":
+        model.half()  # seems to fix bugs for some users.
+
+    return model, tokenizer
 
 
 def train(
