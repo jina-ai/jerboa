@@ -1,6 +1,6 @@
 import os
 import sys
-from typing import List
+from typing import List, Optional
 
 import fire
 import torch
@@ -52,6 +52,7 @@ def train(
     resume_from_checkpoint: str = None,  # either training checkpoint or final adapter
     prompt_template_name: str = "alpaca",  # The prompt template to use, will default to alpaca.
     debug: bool = False,
+    n_samples: Optional[int] = None,
     # debug mode this put all other parameters to a really low value so that we can quickly figure out if the code is
     # running proprely or not
     eval_file: str = "",  # path to file you want to evaluate on
@@ -67,6 +68,7 @@ def train(
             "base_model": base_model,
             "data_path": data_path,
             f"debug: {debug}\n"
+            f"n_samples: {n_samples}\n"
             "output_dir": output_dir,
             "batch_size": batch_size,
             "micro_batch_size": micro_batch_size,
@@ -230,6 +232,8 @@ def train(
     if debug:
         train_data = data["train"].select(range(10)).map(generate_and_tokenize_prompt)
         val_data = None
+    elif n_samples:
+        train_data = data["train"].select(range(n_samples)).map(generate_and_tokenize_prompt)
     elif val_set_size > 0:
         train_val = data["train"].train_test_split(
             test_size=val_set_size, shuffle=True, seed=42
@@ -285,19 +289,19 @@ def train(
         model = torch.compile(model)
 
     trainer.train(resume_from_checkpoint=resume_from_checkpoint)
-
-    model.save_pretrained(output_dir)
-    if len(wandb_project) > 0 and eval_file:
-        results = evaluate(
-            base_model=base_model,
-            lora_weights=output_dir,
-            eval_file=eval_file,
-            eval_limit=eval_limit,
-        )
-        columns = list(results[0].keys())
-        results_data = [[d[key] for key in columns] for d in results]
-        eval_table = wandb.Table(columns=columns, data=results_data)
-        run.log({"Evaluation": eval_table})
+    if int(os.environ.get("LOCAL_RANK", 0)) == 0:
+        model.save_pretrained(output_dir)
+        if len(wandb_project) > 0 and eval_file:
+            results = evaluate(
+                model=model,
+                tokenizer=tokenizer,
+                eval_file=eval_file,
+                eval_limit=eval_limit,
+            )
+            columns = list(results[0].keys())
+            results_data = [[d[key] for key in columns] for d in results]
+            eval_table = wandb.Table(columns=columns, data=results_data)
+            run.log({"Evaluation": eval_table})
 
     print("\n If there's a warning about missing keys above, please disregard :)")
 

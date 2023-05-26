@@ -2,11 +2,12 @@ import json
 import sys
 
 import fire
+from typing import Optional
 
 from utils.prompter import Prompter
 import torch
 from peft import PeftModel
-from transformers import LlamaForCausalLM, LlamaTokenizer, GenerationConfig
+from transformers import LlamaForCausalLM, LlamaTokenizer, GenerationConfig, PreTrainedTokenizer
 
 if torch.cuda.is_available():
     device = "cuda"
@@ -22,18 +23,21 @@ except:  # noqa: E722
 
 def evaluate(
         load_8bit: bool = False,
-        base_model: str = "",
+        base_model: str = "huggyllama/llama-7b",
         lora_weights: str = "tloen/alpaca-lora-7b",
+        model: Optional[torch.Module] = None,
+        tokenizer: Optional[PreTrainedTokenizer] = None,
         prompt_template: str = "",
         eval_file: str = "",
         eval_limit: int = 0,
 ):
     assert (
-        base_model
-    ), "Please specify a --base_model, e.g. --base_model='huggyllama/llama-7b'"
+        base_model or model
+    ), "Please specify a --base_model or model, e.g. --base_model='huggyllama/llama-7b'"
 
     prompter = Prompter(prompt_template)
-    tokenizer = LlamaTokenizer.from_pretrained(base_model)
+    if not tokenizer:
+        tokenizer = LlamaTokenizer.from_pretrained(base_model)
     # Default configurations
     llama_args = {
         "torch_dtype": torch.float16,
@@ -56,21 +60,20 @@ def evaluate(
     else:
         llama_args["low_cpu_mem_usage"] = True
 
-    # Instantiate models
-    model = LlamaForCausalLM.from_pretrained(base_model, **llama_args)
-    model = PeftModel.from_pretrained(model, **peft_args)
+    if not model:
+        # Instantiate models
+        model = LlamaForCausalLM.from_pretrained(base_model, **llama_args)
+        model = PeftModel.from_pretrained(model, **peft_args)
 
-    # unwind broken decapoda-research config
-    model.config.pad_token_id = tokenizer.pad_token_id = 0  # unk
-    model.config.bos_token_id = 1
-    model.config.eos_token_id = 2
+        # unwind broken decapoda-research config
+        model.config.pad_token_id = tokenizer.pad_token_id = 0  # unk
+        model.config.bos_token_id = 1
+        model.config.eos_token_id = 2
 
-    if not load_8bit:
-        model.half()  # seems to fix bugs for some users.
+        if not load_8bit:
+            model.half()  # seems to fix bugs for some users.
 
     model.eval()
-    if torch.__version__ >= "2" and sys.platform != "win32":
-        model = torch.compile(model)
 
     def evaluate(
             instruction,
