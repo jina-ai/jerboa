@@ -286,11 +286,12 @@ def train(
         model = torch.compile(model)
     trainer.train(resume_from_checkpoint=resume_from_checkpoint)
 
-    model.save_pretrained(output_dir)
+    lora_dir = f"{output_dir}/lora_adapter"
+    model.save_pretrained(lora_dir)
 
     if wandb_log_model and use_wandb:
         artifact = wandb.Artifact(name='lora_weight', type='model')
-        artifact.add_dir(output_dir)
+        artifact.add_dir(lora_dir)
 
         run.log_artifact(artifact)
 
