@@ -13,6 +13,7 @@ if torch.cuda.is_available():
 else:
     device = "cpu"
 
+
 # try:
 #     if torch.backends.mps.is_available():
 #         device = "mps"
@@ -71,7 +72,8 @@ def evaluate(
     model.config.bos_token_id = 1
     model.config.eos_token_id = 2
 
-    if not load_8bit:
+    # floatt16 only available on gpu, do not half model for cpu
+    if not load_8bit and device == "cuda":
         model.half()  # seems to fix bugs for some users.
 
     model.eval()
