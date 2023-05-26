@@ -31,8 +31,12 @@ def load_model_tokenizer(
     assert (
         base_model
     ), "Please specify a --base_model or model, e.g. --base_model='huggyllama/llama-7b'"
-    tokenizer = LlamaTokenizer.from_pretrained(base_model)
 
+    if debug:
+        base_model = "decapoda-research/llama-7b-hf"
+
+    tokenizer = LlamaTokenizer.from_pretrained(base_model)
+    # Default configurations
     llama_args = {
         "torch_dtype": torch.float16 if device == "cuda" else torch.float32,
         "device_map": {"": device},
@@ -52,7 +56,7 @@ def load_model_tokenizer(
         llama_args["low_cpu_mem_usage"] = True
 
     # Instantiate models
-    if debug or base_model == 'debug_llama':
+    if debug:
         # Debugging configuration for the Llama model, reduces parameters
         # If a gpu is available the model will run on the gpu, otherwise cpu
         # device = 'cuda' if torch.cuda.is_available() else 'cpu'
@@ -68,6 +72,7 @@ def load_model_tokenizer(
     model.config.bos_token_id = 1
     model.config.eos_token_id = 2
 
+    # floatt16 only available on gpu, do not half model for cpu
     if not load_8bit and device == "cuda":
         model.half()  # seems to fix bugs for some users.
 
@@ -103,7 +108,7 @@ def train(
     wandb_project: str = "jerboa-debug",
     wandb_run_name: str = "",
     wandb_watch: str = "",  # options: false | gradients | all
-    wandb_log_model: str = "",  # options: false | true
+    wandb_log_model: bool = True,  # options: false | true
     resume_from_checkpoint: str = None,  # either training checkpoint or final adapter
     prompt_template_name: str = "alpaca",  # The prompt template to use, will default to alpaca.
     debug: bool = False,
@@ -118,7 +123,9 @@ def train(
         micro_batch_size = 1
         num_epochs = 1
 
-    if int(os.environ.get("LOCAL_RANK", 0)) == 0:
+    is_master_process = int(os.environ.get("LOCAL_RANK", 0)) == 0
+
+    if is_master_process:
         params_dict = {
             "base_model": base_model,
             "data_path": data_path,
@@ -168,14 +175,12 @@ def train(
     # Only overwrite environ if wandb param passed
     if use_wandb:
         os.environ["WANDB_PROJECT"] = wandb_project
-        if int(os.environ.get("LOCAL_RANK", 0)) == 0:
+        if is_master_process:
             run = wandb.init(wandb_project)
     else:
         os.environ["WANDB_MODE"] = "disabled"
     if use_wandb and len(wandb_watch) > 0:
         os.environ["WANDB_WATCH"] = wandb_watch
-    if use_wandb and len(wandb_log_model) > 0:
-        os.environ["WANDB_LOG_MODEL"] = wandb_log_model
 
     # Debugging model with smaller footprint
     if debug or base_model == 'debug_llama':
@@ -269,7 +274,7 @@ def train(
         checkpoint_name = os.path.join(
             resume_from_checkpoint, "pytorch_model.bin"
         )  # Full checkpoint
-        if use_wandb and int(os.environ.get("LOCAL_RANK", 0)) == 0:
+        if use_wandb and is_master_process:
             run = wandb.init(wandb_project, resume="allow")
         if not os.path.exists(checkpoint_name):
             checkpoint_name = os.path.join(
@@ -346,8 +351,17 @@ def train(
     if torch.__version__ >= "2" and sys.platform != "win32":
         model = torch.compile(model)
     trainer.train(resume_from_checkpoint=resume_from_checkpoint)
-    if int(os.environ.get("LOCAL_RANK", 0)) == 0:
-        model.save_pretrained(output_dir)
+
+    if is_master_process:
+        lora_dir = f"{output_dir}/lora_adapter"
+        model.save_pretrained(lora_dir)
+
+        if wandb_log_model and use_wandb:
+            artifact = wandb.Artifact(name='lora_weight', type='model')
+            artifact.add_dir(lora_dir)
+
+            run.log_artifact(artifact)
+
         if use_wandb and eval_file:
             results = evaluate(
                 model=model,
