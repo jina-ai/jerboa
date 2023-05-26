@@ -27,6 +27,9 @@ def evaluate(
         base_model
     ), "Please specify a --base_model, e.g. --base_model='huggyllama/llama-7b'"
 
+    if debug:
+        base_model = "decapoda-research/llama-7b-hf"
+
     prompter = Prompter(prompt_template)
     tokenizer = LlamaTokenizer.from_pretrained(base_model)
     # Default configurations
@@ -49,7 +52,7 @@ def evaluate(
         llama_args["low_cpu_mem_usage"] = True
 
     # Instantiate models
-    if debug or base_model == 'debug_llama':
+    if debug:
         # Debugging configuration for the Llama model, reduces parameters
         # If a gpu is available the model will run on the gpu, otherwise cpu
         # device = 'cuda' if torch.cuda.is_available() else 'cpu'

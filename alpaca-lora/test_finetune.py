@@ -13,7 +13,7 @@ def test_debug_mode():
 
 def test_eval():
     results = evaluate(
-        base_model='debug_llama',
+        base_model='base_model',
         eval_file='resources/eval_sample.jsonl',
         eval_limit=2,
         debug=True,
