@@ -4,7 +4,7 @@ from finetune import train
 
 def test_debug_mode():
     train(
-        base_model='debug_llama',
+        base_model='decapoda-research/llama-7b-hf',
         output_dir='trash',
         debug=True,
         use_wandb=False,
@@ -13,7 +13,7 @@ def test_debug_mode():
 
 def test_eval():
     results = evaluate(
-        base_model='base_model',
+        base_model='decapoda-research/llama-7b-hf',
         eval_file='resources/eval_sample.jsonl',
         eval_limit=2,
         debug=True,
