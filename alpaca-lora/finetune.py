@@ -22,7 +22,7 @@ from utils.prompter import Prompter
 
 def train(
     # model/data params
-    base_model: str = "",  # the only required argument
+    base_model: str = "decapoda-research/llama-7b-hf",
     data_path: str = "yahma/alpaca-cleaned",
     output_dir: str = "./lora-alpaca",
     # training hyperparams
@@ -45,7 +45,8 @@ def train(
     add_eos_token: bool = False,
     group_by_length: bool = False,  # faster, but produces an odd training loss curve
     # wandb params
-    wandb_project: str = "",
+    use_wandb: bool = True,  # flag to completely remove wandb
+    wandb_project: str = "jerboa-debug",
     wandb_run_name: str = "",
     wandb_watch: str = "",  # options: false | gradients | all
     wandb_log_model: str = "",  # options: false | true
@@ -67,8 +68,8 @@ def train(
         params_dict = {
             "base_model": base_model,
             "data_path": data_path,
-            f"debug: {debug}\n"
-            f"n_samples: {n_samples}\n"
+            "debug:": debug,
+            "n_samples": n_samples,
             "output_dir": output_dir,
             "batch_size": batch_size,
             "micro_batch_size": micro_batch_size,
@@ -93,9 +94,6 @@ def train(
 
         print("Training Alpaca-LoRA model with params:", params_dict)
 
-    assert (
-        base_model
-    ), "Please specify a --base_model, e.g. --base_model='huggyllama/llama-7b'"
     gradient_accumulation_steps = batch_size // micro_batch_size
 
     prompter = Prompter(prompt_template_name)
@@ -108,17 +106,21 @@ def train(
         gradient_accumulation_steps = gradient_accumulation_steps // world_size
 
     # Check if parameter passed or if set within environ
-    use_wandb = len(wandb_project) > 0 or (
-        "WANDB_PROJECT" in os.environ and len(os.environ["WANDB_PROJECT"]) > 0
+    use_wandb = use_wandb and (
+        len(wandb_project) > 0
+        or ("WANDB_PROJECT" in os.environ and len(os.environ["WANDB_PROJECT"]) > 0)
     )
+
     # Only overwrite environ if wandb param passed
-    if len(wandb_project) > 0:
+    if use_wandb:
         os.environ["WANDB_PROJECT"] = wandb_project
         if int(os.environ.get("LOCAL_RANK", 0)) == 0:
             run = wandb.init(wandb_project)
-    if len(wandb_watch) > 0:
+    else:
+        os.environ["WANDB_MODE"] = "disabled"
+    if use_wandb and len(wandb_watch) > 0:
         os.environ["WANDB_WATCH"] = wandb_watch
-    if len(wandb_log_model) > 0:
+    if use_wandb and len(wandb_log_model) > 0:
         os.environ["WANDB_LOG_MODEL"] = wandb_log_model
 
     # Debugging model with smaller footprint
@@ -213,7 +215,7 @@ def train(
         checkpoint_name = os.path.join(
             resume_from_checkpoint, "pytorch_model.bin"
         )  # Full checkpoint
-        if len(wandb_project) > 0 and int(os.environ.get("LOCAL_RANK", 0)) == 0:
+        if use_wandb and int(os.environ.get("LOCAL_RANK", 0)) == 0:
             run = wandb.init(wandb_project, resume="allow")
         if not os.path.exists(checkpoint_name):
             checkpoint_name = os.path.join(
@@ -273,7 +275,7 @@ def train(
             load_best_model_at_end=True if val_set_size > 0 else False,
             ddp_find_unused_parameters=False if ddp else None,
             group_by_length=group_by_length,
-            report_to="wandb" if use_wandb else None,
+            report_to="wandb" if use_wandb else 'none',
             run_name=wandb_run_name if use_wandb else None,
         ),
         data_collator=transformers.DataCollatorForSeq2Seq(
@@ -289,11 +291,10 @@ def train(
 
     if torch.__version__ >= "2" and sys.platform != "win32":
         model = torch.compile(model)
-
     trainer.train(resume_from_checkpoint=resume_from_checkpoint)
     if int(os.environ.get("LOCAL_RANK", 0)) == 0:
         model.save_pretrained(output_dir)
-        if len(wandb_project) > 0 and eval_file:
+        if use_wandb and eval_file:
             results = evaluate(
                 model=model,
                 tokenizer=tokenizer,
