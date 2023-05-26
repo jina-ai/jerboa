@@ -12,7 +12,7 @@ on:
     types: [opened, synchronize, reopened]
   push:
     branches:
-      - feat-set-up-ci
+      - main
 
 
 jobs:
