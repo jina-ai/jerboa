@@ -233,8 +233,6 @@ def train(
     if debug:
         train_data = data["train"].select(range(10)).map(generate_and_tokenize_prompt)
         val_data = None
-    elif n_samples:
-        train_data = data["train"].select(range(n_samples)).map(generate_and_tokenize_prompt)
     elif val_set_size > 0:
         train_val = data["train"].train_test_split(
             test_size=val_set_size, shuffle=True, seed=42
@@ -244,6 +242,9 @@ def train(
     else:
         train_data = data["train"].shuffle().map(generate_and_tokenize_prompt)
         val_data = None
+
+    if n_samples:
+        train_data = train_data.select(range(n_samples))
 
     if not ddp and torch.cuda.device_count() > 1:
         # keeps Trainer from trying its own DataParallelism when more than 1 gpu is available
