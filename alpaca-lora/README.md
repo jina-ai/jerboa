@@ -41,6 +41,42 @@ Training on 3x3090 GPUs:
 WORLD_SIZE=2 CUDA_VISIBLE_DEVICES=0,1,2 torchrun --nproc_per_node=3 --master_port=1234 finetune.py --base_model 'decapoda-research/llama-7b-hf' --output_dir './lora-alpaca' --num_epochs 3 --batch_size 128 --micro_batch_size 4
 ```
 
+## Evaluation
+To run evaluation you first need an evaluation file or dataset.
+This evaluation looks like the following:
+
+```bash
+{"id": "user_oriented_task_0", "motivation_app": "Grammarly", "instruction": "The sentence you are given might be too wordy, complicated, or unclear. Rewrite the sentence and make your writing clearer by keeping it concise. Whenever possible, break complex sentences into multiple sentences and eliminate unnecessary words.", "instances": [{"input": "If you have any questions about my rate or if you find it necessary to increase or decrease the scope for this project, please let me know.", "output": "If you have any questions about my rate or find it necessary to increase or decrease this project's scope, please let me know."}]}
+```
+
+You can download self-instruct evaluation data using this command:
+
+```bash
+wget https://raw.githubusercontent.com/yizhongw/self-instruct/main/human_eval/user_oriented_instructions.jsonl
+```
+
+To run evaluation after finetuning you can use the following command:
+
+```bash
+CUDA_VISIBLE_DEVICES=2 \
+python finetune.py \
+  --base_model 'decapoda-research/llama-7b-hf' \
+  --data_path <Your-data-path> \
+  --output_dir './lora-alpaca' \
+  --wandb_project 'jerboa' \
+  --wandb_run_name 'test-run' \
+  --wandb_watch 'gradients' \
+  --wandb_log_model 'true' \
+  --num_epochs '2' \
+  --eval_file 'user_oriented_instructions.jsonl' \
+  --eval_limit '5'
+```
+
+--eval_file: path to the evaluation file<br>
+--eval_limit: number of examples to evaluate on
+
+Evaluation results will be automatically logged to wandb.
+
 # 🦙🌲🤏 Alpaca-LoRA
 
 - 🤗 **Try the pretrained model out [here](https://huggingface.co/spaces/tloen/alpaca-lora), courtesy of a GPU grant from Huggingface!**

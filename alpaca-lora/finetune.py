@@ -114,7 +114,8 @@ def train(
     # Only overwrite environ if wandb param passed
     if len(wandb_project) > 0:
         os.environ["WANDB_PROJECT"] = wandb_project
-        run = wandb.init(wandb_project)
+        if int(os.environ.get("LOCAL_RANK", 0)) == 0:
+            run = wandb.init(wandb_project)
     if len(wandb_watch) > 0:
         os.environ["WANDB_WATCH"] = wandb_watch
     if len(wandb_log_model) > 0:
@@ -212,7 +213,7 @@ def train(
         checkpoint_name = os.path.join(
             resume_from_checkpoint, "pytorch_model.bin"
         )  # Full checkpoint
-        if len(wandb_project) > 0:
+        if len(wandb_project) > 0 and int(os.environ.get("LOCAL_RANK", 0)) == 0:
             run = wandb.init(wandb_project, resume="allow")
         if not os.path.exists(checkpoint_name):
             checkpoint_name = os.path.join(
