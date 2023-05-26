@@ -1,11 +1,15 @@
 import json
-import sys
+from typing import Optional
 
 import fire
-from typing import Optional
 import torch
 from peft import PeftModel
-from transformers import GenerationConfig, LlamaForCausalLM, LlamaTokenizer, PreTrainedTokenizer
+from transformers import (
+    GenerationConfig,
+    LlamaForCausalLM,
+    LlamaTokenizer,
+    PreTrainedTokenizer,
+)
 from utils.llama_config import low_footprint_config
 from utils.prompter import Prompter
 
@@ -51,7 +55,6 @@ def evaluate(
         pass  # No changes needed
     else:
         llama_args["low_cpu_mem_usage"] = True
-
 
     # Instantiate models
     if not model:
