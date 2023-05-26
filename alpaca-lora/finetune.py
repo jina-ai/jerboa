@@ -45,7 +45,7 @@ def train(
     add_eos_token: bool = False,
     group_by_length: bool = False,  # faster, but produces an odd training loss curve
     # wandb params
-    use_wandb: bool = True,  # flag to complely remove wandb
+    use_wandb: bool = True,  # flag to completely remove wandb
     wandb_project: str = "jerboa-debug",
     wandb_run_name: str = "",
     wandb_watch: str = "",  # options: false | gradients | all
