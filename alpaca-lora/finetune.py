@@ -49,7 +49,7 @@ def train(
     wandb_project: str = "jerboa-debug",
     wandb_run_name: str = "",
     wandb_watch: str = "",  # options: false | gradients | all
-    wandb_log_model: str = "",  # options: false | true
+    wandb_log_model: bool = True,  # options: false | true
     resume_from_checkpoint: str = None,  # either training checkpoint or final adapter
     prompt_template_name: str = "alpaca",  # The prompt template to use, will default to alpaca.
     debug: bool = False,
@@ -118,8 +118,6 @@ def train(
         os.environ["WANDB_MODE"] = "disabled"
     if use_wandb and len(wandb_watch) > 0:
         os.environ["WANDB_WATCH"] = wandb_watch
-    if use_wandb and len(wandb_log_model) > 0:
-        os.environ["WANDB_LOG_MODEL"] = wandb_log_model
 
     # Debugging model with smaller footprint
     if debug or base_model == 'debug_llama':
@@ -288,7 +286,14 @@ def train(
         model = torch.compile(model)
     trainer.train(resume_from_checkpoint=resume_from_checkpoint)
 
-    model.save_pretrained(output_dir)
+    lora_dir = f"{output_dir}/lora_adapter"
+    model.save_pretrained(lora_dir)
+
+    if wandb_log_model and use_wandb:
+        artifact = wandb.Artifact(name='lora_weight', type='model')
+        artifact.add_dir(lora_dir)
+
+        run.log_artifact(artifact)
 
     if use_wandb and eval_file:
         results = evaluate(
