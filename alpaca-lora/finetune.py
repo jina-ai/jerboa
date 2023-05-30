@@ -22,7 +22,7 @@ from utils.prompter import Prompter
 
 
 def load_model_tokenizer(
-    base_model: str = "huggyllama/llama-7b",
+    base_model: str = "yahma/llama-7b-hf",
     lora_weights: str = "tloen/alpaca-lora-7b",
     load_8bit: bool = False,
     debug: bool = False,
@@ -33,7 +33,7 @@ def load_model_tokenizer(
     ), "Please specify a --base_model or model, e.g. --base_model='huggyllama/llama-7b'"
 
     if debug:
-        base_model = "decapoda-research/llama-7b-hf"
+        base_model = "yahma/llama-7b-hf"
 
     tokenizer = LlamaTokenizer.from_pretrained(base_model)
     # Default configurations
@@ -67,10 +67,7 @@ def load_model_tokenizer(
 
     model = PeftModel.from_pretrained(model, **peft_args)
 
-    # unwind broken decapoda-research config
     model.config.pad_token_id = tokenizer.pad_token_id = 0  # unk
-    model.config.bos_token_id = 1
-    model.config.eos_token_id = 2
 
     # floatt16 only available on gpu, do not half model for cpu
     if not load_8bit and device == "cuda":
@@ -81,7 +78,7 @@ def load_model_tokenizer(
 
 def train(
     # model/data params
-    base_model: str = "decapoda-research/llama-7b-hf",
+    base_model: str = "yahma/llama-7b-hf",
     data_path: str = "yahma/alpaca-cleaned",
     output_dir: str = "./lora-alpaca",
     # training hyperparams

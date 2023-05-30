@@ -43,13 +43,13 @@ It is possible to train the model on multiple GPUs. This allows to train the mod
 Training on 2x3090 GPUs: 
 
 ```bash
-WORLD_SIZE=2 CUDA_VISIBLE_DEVICES=1,2 torchrun --nproc_per_node=2 --master_port=1234 finetune.py --base_model 'decapoda-research/llama-7b-hf' --output_dir './lora-alpaca' --batch_size 128 --micro_batch_size 4 --eval_limit 30 --eval_file user_oriented_instructions.jsonl --wandb_log_model true --wandb_project jerboa --wandb_run_name jerboa-intial-train --wandb_watch gradients  --num_epochs 3
+WORLD_SIZE=2 CUDA_VISIBLE_DEVICES=1,2 torchrun --nproc_per_node=2 --master_port=1234 finetune.py --base_model 'yahma/llama-7b-hf' --output_dir './lora-alpaca' --batch_size 128 --micro_batch_size 4 --eval_limit 30 --eval_file user_oriented_instructions.jsonl --wandb_log_model true --wandb_project jerboa --wandb_run_name jerboa-intial-train --wandb_watch gradients  --num_epochs 3
 ```
 
-Training on 2x3090 GPUs: 
+Training on 3x3090 GPUs: 
 
 ```bash
-WORLD_SIZE=3 CUDA_VISIBLE_DEVICES=0,1,2 torchrun --nproc_per_node=3 --master_port=1234 finetune.py --base_model 'decapoda-research/llama-7b-hf' --output_dir './lora-alpaca' --batch_size 128 --micro_batch_size 4 --eval_limit 30 --eval_file user_oriented_instructions.jsonl --wandb_log_model true --wandb_project jerboa --wandb_run_name jerboa-intial-train --wandb_watch gradients  --num_epochs 3
+WORLD_SIZE=3 CUDA_VISIBLE_DEVICES=0,1,2 torchrun --nproc_per_node=3 --master_port=1234 finetune.py --base_model 'yahma/llama-7b-hf' --output_dir './lora-alpaca' --batch_size 128 --micro_batch_size 4 --eval_limit 30 --eval_file user_oriented_instructions.jsonl --wandb_log_model true --wandb_project jerboa --wandb_run_name jerboa-intial-train --wandb_watch gradients  --num_epochs 3
 ```
 
 ## Evaluation
@@ -71,7 +71,7 @@ To run evaluation after finetuning you can use the following command:
 ```bash
 CUDA_VISIBLE_DEVICES=2 \
 python finetune.py \
-  --base_model 'decapoda-research/llama-7b-hf' \
+  --base_model 'yahma/llama-7b-hf' \
   --data_path <Your-data-path> \
   --output_dir './lora-alpaca' \
   --wandb_project 'jerboa' \
@@ -126,7 +126,7 @@ Example usage:
 
 ```bash
 python finetune.py \
-    --base_model 'decapoda-research/llama-7b-hf' \
+    --base_model 'yahma/llama-7b-hf' \
     --data_path 'yahma/alpaca-cleaned' \
     --output_dir './lora-alpaca'
 ```
@@ -135,7 +135,7 @@ We can also tweak our hyperparameters:
 
 ```bash
 python finetune.py \
-    --base_model 'decapoda-research/llama-7b-hf' \
+    --base_model 'yahma/llama-7b-hf' \
     --data_path 'yahma/alpaca-cleaned' \
     --output_dir './lora-alpaca' \
     --batch_size 128 \
@@ -161,7 +161,7 @@ Example usage:
 ```bash
 python generate.py \
     --load_8bit \
-    --base_model 'decapoda-research/llama-7b-hf' \
+    --base_model 'yahma/llama-7b-hf' \
     --lora_weights 'tloen/alpaca-lora-7b'
 ```
 
@@ -171,7 +171,7 @@ The most recent "official" Alpaca-LoRA adapter available at [`tloen/alpaca-lora-
 
 ```bash
 python finetune.py \
-    --base_model='decapoda-research/llama-7b-hf' \
+    --base_model='yahma/llama-7b-hf' \
     --num_epochs=10 \
     --cutoff_len=512 \
     --group_by_length \
@@ -202,7 +202,7 @@ docker build -t alpaca-lora .
 ```bash
 docker run --gpus=all --shm-size 64g -p 7860:7860 -v ${HOME}/.cache:/root/.cache --rm alpaca-lora generate.py \
     --load_8bit \
-    --base_model 'decapoda-research/llama-7b-hf' \
+    --base_model 'yahma/llama-7b-hf' \
     --lora_weights 'tloen/alpaca-lora-7b'
 ```
 
