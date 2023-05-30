@@ -15,7 +15,12 @@ from peft import (
     prepare_model_for_int8_training,
     set_peft_model_state_dict,
 )
-from transformers import LlamaConfig, LlamaForCausalLM, LlamaTokenizer
+from transformers import (
+    BitsAndBytesConfig,
+    LlamaConfig,
+    LlamaForCausalLM,
+    LlamaTokenizer,
+)
 from utils.llama_config import low_footprint_config
 from utils.prompter import Prompter
 
@@ -24,7 +29,7 @@ from utils.prompter import Prompter
 
 def train(
     # model/data params
-    base_model: str = "decapoda-research/llama-7b-hf",
+    base_model: str = "yahma/llama-7b-hf",
     data_path: str = "yahma/alpaca-cleaned",
     output_dir: str = "./lora-alpaca",
     # training hyperparams
@@ -42,6 +47,7 @@ def train(
         "q_proj",
         "v_proj",
     ],
+    use_4bit_quantization=False,
     # llm hyperparams
     train_on_inputs: bool = True,  # if False, masks out inputs in loss
     add_eos_token: bool = False,
@@ -123,23 +129,34 @@ def train(
     if use_wandb and len(wandb_log_model) > 0:
         os.environ["WANDB_LOG_MODEL"] = wandb_log_model
 
+    quant_config = BitsAndBytesConfig(
+        load_in_4bit=True,
+        bnb_4bit_quant_type="nf4",
+        bnb_4bit_use_double_quant=True,
+        bnb_4bit_compute_dtype=torch.bfloat16,
+    )
+
+    device = 'cuda' if torch.cuda.is_available() else 'cpu'
+
     # Debugging model with smaller footprint
     if debug or base_model == 'debug_llama':
         # Debugging configuration for the Llama model, reduces parameters
         # If a gpu is available the model will run on the gpu, otherwise cpu
         device = 'cuda' if torch.cuda.is_available() else 'cpu'
         llama_config = low_footprint_config
-        model = LlamaForCausalLM(llama_config).to(device)
+        debug_model = LlamaForCausalLM(
+            llama_config,
+        ).to(device)
+        debug_model.save_pretrained('./empty_model')
 
     # Load pretrained model with default Llama configuration
-    else:
-        model = LlamaForCausalLM.from_pretrained(
-            base_model,
-            load_in_8bit=True,
-            torch_dtype=torch.float16,
-            device_map=device_map,
-            config=LlamaConfig(),
-        )
+    model = LlamaForCausalLM.from_pretrained(
+        pretrained_model_name_or_path='./empty_model' if debug else base_model,
+        torch_dtype=torch.float16,
+        device_map=device_map,
+        config=llama_config if debug else LlamaConfig(),
+        quantization_config=quant_config,
+    )
 
     tokenizer = LlamaTokenizer.from_pretrained(base_model)
 
@@ -202,7 +219,6 @@ def train(
         bias="none",
         task_type="CAUSAL_LM",
     )
-
     model = get_peft_model(model, config)
 
     if data_path.endswith(".json") or data_path.endswith(".jsonl"):
