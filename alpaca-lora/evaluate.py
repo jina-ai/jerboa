@@ -1,11 +1,8 @@
 import json
-import sys
 
 import fire
 import torch
-from peft import PeftModel
-from transformers import GenerationConfig, LlamaForCausalLM, LlamaTokenizer
-from utils.llama_config import low_footprint_config
+from transformers import GenerationConfig, PreTrainedTokenizer
 from utils.prompter import Prompter
 
 if torch.cuda.is_available():
@@ -15,66 +12,15 @@ else:
 
 
 def evaluate(
-    load_8bit: bool = False,
-    base_model: str = "",
-    lora_weights: str = "tloen/alpaca-lora-7b",
+    model: torch.nn.Module,
+    tokenizer: PreTrainedTokenizer,
     prompt_template: str = "",
     eval_file: str = "",
     eval_limit: int = 0,
-    debug: bool = False,
 ):
-    assert (
-        base_model
-    ), "Please specify a --base_model, e.g. --base_model='huggyllama/llama-7b'"
-
-    if debug:
-        base_model = "decapoda-research/llama-7b-hf"
-
     prompter = Prompter(prompt_template)
-    tokenizer = LlamaTokenizer.from_pretrained(base_model)
-    # Default configurations
-    llama_args = {
-        "torch_dtype": torch.float16 if device == "cuda" else torch.float32,
-        "device_map": {"": device},
-    }
-    peft_args = {
-        "model_id": lora_weights,
-        "torch_dtype": torch.float16 if device == "cuda" else torch.float32,
-        "device_map": {"": device},
-    }
-
-    # Conditional configurations
-    if device == "cuda":
-        llama_args.update({"load_in_8bit": load_8bit, "device_map": "auto"})
-    elif device == "mps":
-        pass  # No changes needed
-    else:
-        llama_args["low_cpu_mem_usage"] = True
-
-    # Instantiate models
-    if debug:
-        # Debugging configuration for the Llama model, reduces parameters
-        # If a gpu is available the model will run on the gpu, otherwise cpu
-        # device = 'cuda' if torch.cuda.is_available() else 'cpu'
-        llama_config = low_footprint_config
-        model = LlamaForCausalLM(llama_config).to(device)
-    else:
-        model = LlamaForCausalLM.from_pretrained(base_model, **llama_args)
-
-    model = PeftModel.from_pretrained(model, **peft_args)
-
-    # unwind broken decapoda-research config
-    model.config.pad_token_id = tokenizer.pad_token_id = 0  # unk
-    model.config.bos_token_id = 1
-    model.config.eos_token_id = 2
-
-    # floatt16 only available on gpu, do not half model for cpu
-    if not load_8bit and device == "cuda":
-        model.half()  # seems to fix bugs for some users.
 
     model.eval()
-    if torch.__version__ >= "2" and sys.platform != "win32":
-        model = torch.compile(model)
 
     def evaluate(
         instruction,
