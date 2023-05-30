@@ -132,6 +132,7 @@ def train(
 
     if device == 'cpu':
         load_in_4bit = False
+        load_in_8bit = False
 
     quant_config = BitsAndBytesConfig(
         load_in_4bit=load_in_4bit,
