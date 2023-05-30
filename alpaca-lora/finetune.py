@@ -212,11 +212,11 @@ def train(
         debug_model = LlamaForCausalLM(
             llama_config,
         )
-        debug_model.save_pretrained('./empty_model')
+        debug_model.save_pretrained('./trash/empty_model')
 
     # Instantiate Llama model either from base model or from empty model
     model = LlamaForCausalLM.from_pretrained(
-        pretrained_model_name_or_path='./empty_model' if debug else base_model,
+        pretrained_model_name_or_path='./trash/empty_model' if debug else base_model,
         torch_dtype=torch.float16,
         device_map=device_map,
         config=llama_config,
