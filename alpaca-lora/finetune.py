@@ -158,6 +158,8 @@ def train(
         config=llama_config,
         quantization_config=quant_config,
     )
+    if debug:
+        model = model.to(device)
 
     tokenizer = LlamaTokenizer.from_pretrained(base_model)
 
