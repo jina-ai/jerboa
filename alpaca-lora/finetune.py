@@ -1,6 +1,6 @@
 import os
 import sys
-from typing import List
+from typing import List, Optional, Tuple
 
 import fire
 import torch
@@ -10,6 +10,7 @@ from datasets import load_dataset
 from evaluate import evaluate
 from peft import (
     LoraConfig,
+    PeftModel,
     get_peft_model,
     get_peft_model_state_dict,
     prepare_model_for_kbit_training,
@@ -23,6 +24,64 @@ from transformers import (
 )
 from utils.llama_config import low_footprint_config
 from utils.prompter import Prompter
+
+
+def load_model_tokenizer(
+    base_model: str = "huggyllama/llama-7b",
+    lora_weights: str = "tloen/alpaca-lora-7b",
+    load_8bit: bool = False,
+    debug: bool = False,
+    device: str = 'cuda',
+) -> Tuple[torch.nn.Module, transformers.PreTrainedTokenizer]:
+    assert (
+        base_model
+    ), "Please specify a --base_model or model, e.g. --base_model='huggyllama/llama-7b'"
+
+    if debug:
+        base_model = "decapoda-research/llama-7b-hf"
+
+    tokenizer = LlamaTokenizer.from_pretrained(base_model)
+    # Default configurations
+    llama_args = {
+        "torch_dtype": torch.float16 if device == "cuda" else torch.float32,
+        "device_map": {"": device},
+    }
+    peft_args = {
+        "model_id": lora_weights,
+        "torch_dtype": torch.float16 if device == "cuda" else torch.float32,
+        "device_map": {"": device},
+    }
+
+    # Conditional configurations
+    if device == "cuda":
+        llama_args.update({"load_in_8bit": load_8bit, "device_map": "auto"})
+    elif device == "mps":
+        pass  # No changes needed
+    else:
+        llama_args["low_cpu_mem_usage"] = True
+
+    # Instantiate models
+    if debug:
+        # Debugging configuration for the Llama model, reduces parameters
+        # If a gpu is available the model will run on the gpu, otherwise cpu
+        # device = 'cuda' if torch.cuda.is_available() else 'cpu'
+        llama_config = low_footprint_config
+        model = LlamaForCausalLM(llama_config).to(device)
+    else:
+        model = LlamaForCausalLM.from_pretrained(base_model, **llama_args)
+
+    model = PeftModel.from_pretrained(model, **peft_args)
+
+    # unwind broken decapoda-research config
+    model.config.pad_token_id = tokenizer.pad_token_id = 0  # unk
+    model.config.bos_token_id = 1
+    model.config.eos_token_id = 2
+
+    # floatt16 only available on gpu, do not half model for cpu
+    if not load_8bit and device == "cuda":
+        model.half()  # seems to fix bugs for some users.
+
+    return model, tokenizer
 
 
 def train(
@@ -55,10 +114,11 @@ def train(
     wandb_project: str = "jerboa-debug",
     wandb_run_name: str = "",
     wandb_watch: str = "",  # options: false | gradients | all
-    wandb_log_model: str = "",  # options: false | true
+    wandb_log_model: bool = True,  # options: false | true
     resume_from_checkpoint: str = None,  # either training checkpoint or final adapter
     prompt_template_name: str = "alpaca",  # The prompt template to use, will default to alpaca.
     debug: bool = False,
+    n_samples: Optional[int] = None,
     # debug mode this put all other parameters to a really low value so that we can quickly figure out if the code is
     # running proprely or not
     eval_file: str = "",  # path to file you want to evaluate on
@@ -69,11 +129,14 @@ def train(
         micro_batch_size = 1
         num_epochs = 1
 
-    if int(os.environ.get("LOCAL_RANK", 0)) == 0:
+    is_master_process = int(os.environ.get("LOCAL_RANK", 0)) == 0
+
+    if is_master_process:
         params_dict = {
             "base_model": base_model,
             "data_path": data_path,
             "debug:": debug,
+            "n_samples": n_samples,
             "output_dir": output_dir,
             "batch_size": batch_size,
             "micro_batch_size": micro_batch_size,
@@ -118,14 +181,12 @@ def train(
     # Only overwrite environ if wandb param passed
     if use_wandb:
         os.environ["WANDB_PROJECT"] = wandb_project
-        if int(os.environ.get("LOCAL_RANK", 0)) == 0:
+        if is_master_process:
             run = wandb.init(wandb_project)
     else:
         os.environ["WANDB_MODE"] = "disabled"
     if use_wandb and len(wandb_watch) > 0:
         os.environ["WANDB_WATCH"] = wandb_watch
-    if use_wandb and len(wandb_log_model) > 0:
-        os.environ["WANDB_LOG_MODEL"] = wandb_log_model
 
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
     load_in_8bit = True if not load_in_4bit else False
@@ -235,7 +296,7 @@ def train(
         checkpoint_name = os.path.join(
             resume_from_checkpoint, "pytorch_model.bin"
         )  # Full checkpoint
-        if use_wandb and int(os.environ.get("LOCAL_RANK", 0)) == 0:
+        if use_wandb and is_master_process:
             run = wandb.init(wandb_project, resume="allow")
         if not os.path.exists(checkpoint_name):
             checkpoint_name = os.path.join(
@@ -264,6 +325,9 @@ def train(
     else:
         train_data = data["train"].shuffle().map(generate_and_tokenize_prompt)
         val_data = None
+
+    if n_samples:
+        train_data = train_data.select(range(n_samples))
 
     if not ddp and torch.cuda.device_count() > 1:
         # keeps Trainer from trying its own DataParallelism when more than 1 gpu is available
@@ -312,19 +376,27 @@ def train(
     print("#################### Model Size: ", sys.getsizeof(model.state_dict()))
     trainer.train(resume_from_checkpoint=resume_from_checkpoint)
 
-    model.save_pretrained(output_dir)
+    if is_master_process:
+        lora_dir = f"{output_dir}/lora_adapter"
+        model.save_pretrained(lora_dir)
 
-    if use_wandb and eval_file:
-        results = evaluate(
-            base_model=base_model,
-            lora_weights=output_dir,
-            eval_file=eval_file,
-            eval_limit=eval_limit,
-        )
-        columns = list(results[0].keys())
-        results_data = [[d[key] for key in columns] for d in results]
-        eval_table = wandb.Table(columns=columns, data=results_data)
-        run.log({"Evaluation": eval_table})
+        if wandb_log_model and use_wandb:
+            artifact = wandb.Artifact(name='lora_weight', type='model')
+            artifact.add_dir(lora_dir)
+
+            run.log_artifact(artifact)
+
+        if use_wandb and eval_file:
+            results = evaluate(
+                model=model,
+                tokenizer=tokenizer,
+                eval_file=eval_file,
+                eval_limit=eval_limit,
+            )
+            columns = list(results[0].keys())
+            results_data = [[d[key] for key in columns] for d in results]
+            eval_table = wandb.Table(columns=columns, data=results_data)
+            run.log({"Evaluation": eval_table})
 
     print("\n If there's a warning about missing keys above, please disregard :)")
 

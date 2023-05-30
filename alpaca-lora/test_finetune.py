@@ -1,5 +1,6 @@
+import torch
 from evaluate import evaluate
-from finetune import train
+from finetune import load_model_tokenizer, train
 
 
 def test_debug_mode():
@@ -12,11 +13,16 @@ def test_debug_mode():
 
 
 def test_eval():
+    model, tokenizer = load_model_tokenizer(
+        base_model='decapoda-research/llama-7b-hf',
+        debug=True,
+        device='cuda' if torch.cuda.is_available() else 'cpu',
+    )
     results = evaluate(
-        base_model='yahma/llama-7b-hf',
+        model=model,
+        tokenizer=tokenizer,
         eval_file='resources/eval_sample.jsonl',
         eval_limit=2,
-        debug=True,
     )
     assert len(results) == 2
     for res in results:
