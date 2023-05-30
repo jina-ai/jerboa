@@ -24,7 +24,7 @@ except:  # noqa: E722
 
 def main(
     load_8bit: bool = False,
-    base_model: str = "",
+    base_model: str = "yahma/llama-7b-hf",
     lora_weights: str = "tloen/alpaca-lora-7b",
     prompt_template: str = "",  # The prompt template to use, will default to alpaca.
     server_name: str = "0.0.0.0",  # Allows to listen on all interfaces by providing '0.
@@ -70,11 +70,6 @@ def main(
             lora_weights,
             device_map={"": device},
         )
-
-    # unwind broken decapoda-research config
-    model.config.pad_token_id = tokenizer.pad_token_id = 0  # unk
-    model.config.bos_token_id = 1
-    model.config.eos_token_id = 2
 
     if not load_8bit:
         model.half()  # seems to fix bugs for some users.
