@@ -104,7 +104,7 @@ def train(
         "q_proj",
         "v_proj",
     ],
-    load_in_4bit=False,
+    load_in_4bit=True,
     # llm hyperparams
     train_on_inputs: bool = True,  # if False, masks out inputs in loss
     add_eos_token: bool = False,
@@ -192,9 +192,8 @@ def train(
     load_in_8bit = True if not load_in_4bit else False
 
     # No quantization available on cpu
-    if device == 'cpu':
-        load_in_4bit = False
-        load_in_8bit = False
+    if device == 'cpu' and (load_in_8bit or load_in_8bit):
+        raise Exception("Quantization (4bit and 8bit) does not work on cpu")
 
     # Define quanitization
     quant_config = BitsAndBytesConfig(
