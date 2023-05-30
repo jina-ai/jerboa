@@ -157,7 +157,7 @@ def train(
         torch_dtype=torch.float16,
         device_map=device_map,
         config=llama_config,
-        quantization_config=quant_config,
+        quantization_config=quant_config if device == "cuda" else None,
     )
     if debug:
         model = model.to(device)
