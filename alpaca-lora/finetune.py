@@ -45,7 +45,7 @@ def train(
         "q_proj",
         "v_proj",
     ],
-    load_in_4bit=True,
+    load_in_4bit=False,
     # llm hyperparams
     train_on_inputs: bool = True,  # if False, masks out inputs in loss
     add_eos_token: bool = False,
@@ -159,7 +159,7 @@ def train(
         config=llama_config,
         quantization_config=quant_config if device == "cuda" else None,
     )
-    if debug:
+    if debug and device == "cpu":
         model = model.to(device)
 
     tokenizer = LlamaTokenizer.from_pretrained(base_model)
