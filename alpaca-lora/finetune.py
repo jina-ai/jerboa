@@ -373,7 +373,6 @@ def train(
     if torch.__version__ >= "2" and sys.platform != "win32":
         model = torch.compile(model)
 
-    print("#################### Model Size: ", sys.getsizeof(model.state_dict()))
     trainer.train(resume_from_checkpoint=resume_from_checkpoint)
 
     if is_master_process:
