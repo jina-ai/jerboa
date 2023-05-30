@@ -71,6 +71,8 @@ def main(
             device_map={"": device},
         )
 
+    model.config.pad_token_id = tokenizer.pad_token_id = 0  #
+
     if not load_8bit:
         model.half()  # seems to fix bugs for some users.
 
