@@ -24,8 +24,6 @@ from transformers import (
 from utils.llama_config import low_footprint_config
 from utils.prompter import Prompter
 
-# Some arbitrary comment to trigger the ci
-
 
 def train(
     # model/data params
@@ -129,7 +127,12 @@ def train(
     if use_wandb and len(wandb_log_model) > 0:
         os.environ["WANDB_LOG_MODEL"] = wandb_log_model
 
+    device = 'cuda' if torch.cuda.is_available() else 'cpu'
     load_in_8bit = True if not load_in_4bit else False
+
+    if device == 'cpu':
+        load_in_4bit = False
+
     quant_config = BitsAndBytesConfig(
         load_in_4bit=load_in_4bit,
         load_in_8bit=load_in_8bit,
@@ -138,14 +141,13 @@ def train(
         bnb_4bit_compute_dtype=torch.float16,
     )
 
-    device = 'cuda' if torch.cuda.is_available() else 'cpu'
     llama_config = low_footprint_config if debug else LlamaConfig()
     # Debugging model with smaller footprint
     if debug:
         # If a gpu is available the model will run on the gpu, otherwise cpu
         debug_model = LlamaForCausalLM(
             llama_config,
-        ).to(device)
+        )
         debug_model.save_pretrained('./empty_model')
 
     # Load pretrained model with default Llama configuration
