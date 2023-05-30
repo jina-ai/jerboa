@@ -191,10 +191,12 @@ def train(
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
     load_in_8bit = True if not load_in_4bit else False
 
+    # No quantization available on cpu
     if device == 'cpu':
         load_in_4bit = False
         load_in_8bit = False
 
+    # Define quanitization
     quant_config = BitsAndBytesConfig(
         load_in_4bit=load_in_4bit,
         load_in_8bit=load_in_8bit,
@@ -203,16 +205,17 @@ def train(
         bnb_4bit_compute_dtype=torch.float16,
     )
 
+    # Load small memory config for llama in debugging model
     llama_config = low_footprint_config if debug else LlamaConfig()
-    # Debugging model with smaller footprint
+
+    # Debugging model with smaller footprint, initialize model and save weights
     if debug:
-        # If a gpu is available the model will run on the gpu, otherwise cpu
         debug_model = LlamaForCausalLM(
             llama_config,
         )
         debug_model.save_pretrained('./empty_model')
 
-    # Load pretrained model with default Llama configuration
+    # Instantiate Llama model either from base model or from empty model
     model = LlamaForCausalLM.from_pretrained(
         pretrained_model_name_or_path='./empty_model' if debug else base_model,
         torch_dtype=torch.float16,
@@ -220,6 +223,8 @@ def train(
         config=llama_config,
         quantization_config=quant_config if device == "cuda" else None,
     )
+
+    # Move model to cpu in debugging mode
     if debug and device == "cpu":
         model = model.to(device)
 
