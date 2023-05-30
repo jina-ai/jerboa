@@ -283,7 +283,7 @@ def train(
             learning_rate=learning_rate,
             fp16=not debug,
             logging_steps=10,
-            optim="paged_adamw_8bit",
+            optim="paged_adamw_8bit" if device == "cuda" else "adamw_torch",
             evaluation_strategy="steps" if val_set_size > 0 else "no",
             save_strategy="steps",
             eval_steps=200 if val_set_size > 0 else None,
