@@ -13,10 +13,15 @@ from peft import (
     PeftModel,
     get_peft_model,
     get_peft_model_state_dict,
-    prepare_model_for_int8_training,
+    prepare_model_for_kbit_training,
     set_peft_model_state_dict,
 )
-from transformers import LlamaConfig, LlamaForCausalLM, LlamaTokenizer
+from transformers import (
+    BitsAndBytesConfig,
+    LlamaConfig,
+    LlamaForCausalLM,
+    LlamaTokenizer,
+)
 from utils.llama_config import low_footprint_config
 from utils.prompter import Prompter
 
@@ -96,6 +101,7 @@ def train(
         "q_proj",
         "v_proj",
     ],
+    load_in_4bit=True,
     # llm hyperparams
     train_on_inputs: bool = True,  # if False, masks out inputs in loss
     add_eos_token: bool = False,
@@ -179,23 +185,44 @@ def train(
     if use_wandb and len(wandb_watch) > 0:
         os.environ["WANDB_WATCH"] = wandb_watch
 
-    # Debugging model with smaller footprint
-    if debug or base_model == 'debug_llama':
-        # Debugging configuration for the Llama model, reduces parameters
-        # If a gpu is available the model will run on the gpu, otherwise cpu
-        device = 'cuda' if torch.cuda.is_available() else 'cpu'
-        llama_config = low_footprint_config
-        model = LlamaForCausalLM(llama_config).to(device)
+    device = 'cuda' if torch.cuda.is_available() else 'cpu'
+    load_in_8bit = True if not load_in_4bit else False
 
-    # Load pretrained model with default Llama configuration
-    else:
-        model = LlamaForCausalLM.from_pretrained(
-            base_model,
-            load_in_8bit=True,
-            torch_dtype=torch.float16,
-            device_map=device_map,
-            config=LlamaConfig(),
+    # No quantization available on cpu
+    if device == 'cpu' and (load_in_8bit or load_in_8bit):
+        raise Exception("Quantization (4bit and 8bit) does not work on cpu")
+
+    # Define quanitization
+    quant_config = BitsAndBytesConfig(
+        load_in_4bit=load_in_4bit,
+        load_in_8bit=load_in_8bit,
+        bnb_4bit_use_double_quant=True,
+        bnb_4bit_quant_type="nf4",
+        bnb_4bit_compute_dtype=torch.float16,
+    )
+
+    # Load small memory config for llama in debugging model
+    llama_config = low_footprint_config if debug else LlamaConfig()
+
+    # Debugging model with smaller footprint, initialize model and save weights
+    if debug:
+        debug_model = LlamaForCausalLM(
+            llama_config,
         )
+        debug_model.save_pretrained('./trash/empty_model')
+
+    # Instantiate Llama model either from base model or from empty model
+    model = LlamaForCausalLM.from_pretrained(
+        pretrained_model_name_or_path='./trash/empty_model' if debug else base_model,
+        torch_dtype=torch.float16,
+        device_map=device_map,
+        config=llama_config,
+        quantization_config=quant_config if device == "cuda" else None,
+    )
+
+    # Move model to cpu in debugging mode
+    if debug and device == "cpu":
+        model = model.to(device)
 
     tokenizer = LlamaTokenizer.from_pretrained(base_model)
 
@@ -248,7 +275,7 @@ def train(
             ]  # could be sped up, probably
         return tokenized_full_prompt
 
-    model = prepare_model_for_int8_training(model)
+    model = prepare_model_for_kbit_training(model)
 
     config = LoraConfig(
         r=lora_r,
@@ -258,7 +285,6 @@ def train(
         bias="none",
         task_type="CAUSAL_LM",
     )
-
     model = get_peft_model(model, config)
 
     if data_path.endswith(".json") or data_path.endswith(".jsonl"):
@@ -321,7 +347,7 @@ def train(
             learning_rate=learning_rate,
             fp16=not debug,
             logging_steps=10,
-            optim="adamw_torch",
+            optim="paged_adamw_8bit" if device == "cuda" else "adamw_torch",
             evaluation_strategy="steps" if val_set_size > 0 else "no",
             save_strategy="steps",
             eval_steps=200 if val_set_size > 0 else None,
@@ -347,6 +373,7 @@ def train(
 
     if torch.__version__ >= "2" and sys.platform != "win32":
         model = torch.compile(model)
+
     trainer.train(resume_from_checkpoint=resume_from_checkpoint)
 
     if is_master_process:
