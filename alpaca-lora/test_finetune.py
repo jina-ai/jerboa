@@ -7,6 +7,7 @@ def test_debug_mode():
     train(
         base_model='decapoda-research/llama-7b-hf',
         output_dir='trash',
+        eval_file='./eval.jsonl',
         debug=True,
         use_wandb=False,
     )
@@ -25,11 +26,13 @@ def test_eval():
         eval_limit=2,
     )
     assert len(results) == 2
+    print(results)
     for res in results:
         assert 'id' in res
         assert 'input' in res
         assert 'output' in res
-        assert 'to_compare' in res
+        assert 'alpaca_lora_output' in res
+        assert 'stanford_alpaca_output' in res
     assert (
         results[0]['instruction']
         == "The sentence you are given might be too wordy, complicated, or unclear. "
