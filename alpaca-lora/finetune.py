@@ -125,6 +125,8 @@ def train(
         batch_size = 2
         micro_batch_size = 1
         num_epochs = 1
+        eval_file = 'user_oriented_instructions.jsonl'
+        eval_limit = 1
 
     is_master_process = int(os.environ.get("LOCAL_RANK", 0)) == 0
 
@@ -386,17 +388,22 @@ def train(
 
             run.log_artifact(artifact)
 
-        if use_wandb and eval_file:
+        if eval_file:
             results = evaluate(
                 model=model,
                 tokenizer=tokenizer,
                 eval_file=eval_file,
                 eval_limit=eval_limit,
             )
-            columns = list(results[0].keys())
-            results_data = [[d[key] for key in columns] for d in results]
-            eval_table = wandb.Table(columns=columns, data=results_data)
-            run.log({"Evaluation": eval_table})
+
+            if use_wandb:
+
+                columns = list(results[0].keys())
+                results_data = [[d[key] for key in columns] for d in results]
+                eval_table = wandb.Table(columns=columns, data=results_data)
+                run.log({"Evaluation": eval_table})
+            else:
+                print(results)
 
     print("\n If there's a warning about missing keys above, please disregard :)")
 

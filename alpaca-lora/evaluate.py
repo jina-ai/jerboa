@@ -1,4 +1,5 @@
 import json
+from typing import Any, Dict, List
 
 import fire
 import torch
@@ -17,7 +18,7 @@ def evaluate(
     prompt_template: str = "",
     eval_file: str = "",
     eval_limit: int = 0,
-):
+) -> List[Dict[str, Any]]:
     prompter = Prompter(prompt_template)
 
     model.eval()
