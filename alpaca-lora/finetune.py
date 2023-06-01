@@ -191,7 +191,7 @@ def train(
     load_in_8bit = True if not load_in_4bit else False
 
     # No quantization available on cpu
-    if device == 'cpu' and (load_in_8bit or load_in_8bit):
+    if device == 'cpu' and (load_in_4bit):
         raise Exception("Quantization (4bit and 8bit) does not work on cpu")
 
     # Define quanitization
@@ -323,7 +323,12 @@ def train(
         train_val = data["train"].train_test_split(
             test_size=val_set_size, shuffle=True, seed=42
         )
-        train_data = train_val["train"].shuffle().map(generate_and_tokenize_prompt)
+        train_data = (
+            train_val["train"]
+            .shuffle()
+            .select(range(int(0.05 * len(train_val["train"]))))
+            .map(generate_and_tokenize_prompt)
+        )
         val_data = train_val["test"].shuffle().map(generate_and_tokenize_prompt)
     else:
         train_data = data["train"].shuffle().map(generate_and_tokenize_prompt)
