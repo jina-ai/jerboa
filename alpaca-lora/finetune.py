@@ -101,7 +101,7 @@ def train(
         "q_proj",
         "v_proj",
     ],
-    load_in_4bit=True,
+    load_in_4bit=False,
     # llm hyperparams
     train_on_inputs: bool = True,  # if False, masks out inputs in loss
     add_eos_token: bool = False,
