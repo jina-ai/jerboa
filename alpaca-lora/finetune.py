@@ -125,7 +125,7 @@ def train(
         batch_size = 2
         micro_batch_size = 1
         num_epochs = 1
-        eval_file = 'eval.json'
+        eval_file = 'resources/eval_sample.jsonl'
         eval_limit = 1
 
     is_master_process = int(os.environ.get("LOCAL_RANK", 0)) == 0
