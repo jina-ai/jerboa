@@ -26,7 +26,6 @@ def test_eval():
         eval_limit=2,
     )
     assert len(results) == 2
-    print(results)
     for res in results:
         assert 'id' in res
         assert 'input' in res
