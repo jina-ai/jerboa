@@ -191,7 +191,7 @@ def train(
     load_in_8bit = True if not load_in_4bit else False
 
     # No quantization available on cpu
-    if device == 'cpu' and (load_in_8bit or load_in_8bit):
+    if device == 'cpu' and (load_in_4bit):
         raise Exception("Quantization (4bit and 8bit) does not work on cpu")
 
     # Define quanitization
