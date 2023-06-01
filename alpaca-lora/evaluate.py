@@ -76,10 +76,10 @@ def evaluate(
                 "instruction": eval_instance["instruction"],
                 "input": eval_instance["instances"][0]["input"],
                 "output": output,
-                "alpaca_lora_output": eval_instance["instances"][0]["output"],
-                "stanford_alpaca_output": eval_instance["instances"][0][
+                "alpaca_lora_output": eval_instance["instances"][0][
                     "stanford_alpaca_output"
                 ],
+                "human_evaluation": eval_instance["instances"][0]["output"],
             }
         )
     return results
