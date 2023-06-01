@@ -323,12 +323,7 @@ def train(
         train_val = data["train"].train_test_split(
             test_size=val_set_size, shuffle=True, seed=42
         )
-        train_data = (
-            train_val["train"]
-            .shuffle()
-            .select(range(int(0.05 * len(train_val["train"]))))
-            .map(generate_and_tokenize_prompt)
-        )
+        train_data = train_val["train"].shuffle().map(generate_and_tokenize_prompt)
         val_data = train_val["test"].shuffle().map(generate_and_tokenize_prompt)
     else:
         train_data = data["train"].shuffle().map(generate_and_tokenize_prompt)
