@@ -125,7 +125,7 @@ def train(
         batch_size = 2
         micro_batch_size = 1
         num_epochs = 1
-        eval_file = 'user_oriented_instructions.jsonl'
+        eval_file = 'eval.json'
         eval_limit = 1
 
     is_master_process = int(os.environ.get("LOCAL_RANK", 0)) == 0
@@ -397,7 +397,6 @@ def train(
             )
 
             if use_wandb:
-
                 columns = list(results[0].keys())
                 results_data = [[d[key] for key in columns] for d in results]
                 eval_table = wandb.Table(columns=columns, data=results_data)
