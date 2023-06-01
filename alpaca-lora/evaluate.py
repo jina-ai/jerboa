@@ -61,10 +61,10 @@ def evaluate(
             eval_data.append(json.loads(line))
 
     results = []
-    for i, eval_instance in enumerate(eval_data):
+    for i, eval_instance in enumerate(eval_data[0]):
         output = list(
             evaluate(
-                eval_instance["instruction"], eval_instance["instances"][0]["input"]
+                eval_instance["instruction"], eval_instance["input"]
             )
         )[0]
         if eval_limit != 0 and i == eval_limit:
@@ -73,9 +73,9 @@ def evaluate(
             {
                 "id": i,
                 "instruction": eval_instance["instruction"],
-                "input": eval_instance["instances"][0]["input"],
+                "input": eval_instance["input"],
                 "output": output,
-                "to_compare": eval_instance["instances"][0]["output"],
+                "to_compare": eval_instance["output"],
             }
         )
     return results
