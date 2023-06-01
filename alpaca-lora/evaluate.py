@@ -62,11 +62,7 @@ def evaluate(
 
     results = []
     for i, eval_instance in enumerate(eval_data[0]):
-        output = list(
-            evaluate(
-                eval_instance["instruction"], eval_instance["input"]
-            )
-        )[0]
+        output = list(evaluate(eval_instance["instruction"], eval_instance["input"]))[0]
         if eval_limit != 0 and i == eval_limit:
             break
         results.append(
