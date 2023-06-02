@@ -17,8 +17,10 @@ from peft import (
     set_peft_model_state_dict,
 )
 from transformers import (
+    AutoConfig,
+    AutoModelForCausalLM,
+    AutoTokenizer,
     BitsAndBytesConfig,
-    LlamaConfig,
     LlamaForCausalLM,
     LlamaTokenizer,
 )
@@ -204,29 +206,40 @@ def train(
     )
 
     # Load small memory config for llama in debugging model
-    llama_config = low_footprint_config if debug else LlamaConfig()
+    low_footprint_general = {
+        'intermediate_size': 64,
+        'num_hidden_layers': 1,
+        'num_attention_heads': 1,
+        'trust_remote_code': True,
+    }
+    model_config = (
+        AutoConfig.from_pretrained(base_model, **low_footprint_general)
+        if debug
+        else AutoConfig.from_pretrained(base_model, trust_remote_code=True)
+    )
 
     # Debugging model with smaller footprint, initialize model and save weights
     if debug:
-        debug_model = LlamaForCausalLM(
-            llama_config,
+        debug_model = AutoModelForCausalLM.from_config(
+            model_config, **{'trust_remote_code': True}
         )
         debug_model.save_pretrained('./trash/empty_model')
 
     # Instantiate Llama model either from base model or from empty model
-    model = LlamaForCausalLM.from_pretrained(
+    model = AutoModelForCausalLM.from_pretrained(
         pretrained_model_name_or_path='./trash/empty_model' if debug else base_model,
         torch_dtype=torch.float16,
         device_map=device_map,
-        config=llama_config,
+        config=model_config,
         quantization_config=quant_config if device == "cuda" else None,
+        trust_remote_code=True,
     )
 
     # Move model to cpu in debugging mode
     if debug and device == "cpu":
         model = model.to(device)
 
-    tokenizer = LlamaTokenizer.from_pretrained(base_model)
+    tokenizer = AutoTokenizer.from_pretrained(base_model)
 
     tokenizer.pad_token_id = 0  # unk. we want this to be different from the eos token
     tokenizer.padding_side = "left"  # Allow batched inference
