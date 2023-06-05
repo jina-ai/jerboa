@@ -26,6 +26,26 @@ this still use wandb. If you want to disable wandb you can do
 CUDA_VISIBLE_DEVICES=0 python finetune.py --debug --use-wandb=False
 ```
 
+## Distributed training
+It is possible to train the model on multiple GPUs. This allows to train the model faster.
+Training on 2x3090 GPUs: 
+
+```bash
+WORLD_SIZE=2 CUDA_VISIBLE_DEVICES=1,2 torchrun --nproc_per_node=2 --master_port=1234 finetune.py --base_model 'yahma/llama-7b-hf' --output_dir './lora-alpaca' --batch_size 128 --micro_batch_size 4 --eval_limit 30 --eval_file eval.jsonl --wandb_log_model true --wandb_project jerboa --wandb_run_name jerboa-intial-train --wandb_watch gradients  --num_epochs 3
+```
+
+Training on 3x3090 GPUs: 
+
+```bash
+WORLD_SIZE=3 CUDA_VISIBLE_DEVICES=0,1,2 torchrun --nproc_per_node=3 --master_port=1234 finetune.py --base_model 'yahma/llama-7b-hf' --output_dir './lora-alpaca' --batch_size 128 --micro_batch_size 4 --eval_limit 30 --eval_file eval.jsonl --wandb_log_model true --wandb_project jerboa --wandb_run_name jerboa-intial-train --wandb_watch gradients  --num_epochs 3
+```
+
+## Training Datasets
+Currently, the training pipeline supports 2 training datasets:
+- `yahma/alpaca-cleaned`: cleaned version of the alpaca dataset, available on the HF datasets hub. This is the used dataset by default
+  - `code_alpaca_20k.json`: a dataset of 20k code snippets, available locally. To use this dataset, specify the following parameter in the training command: `--data_path ./code_alpaca_20k.json`
+
+
 ## Tests
 
 You can run our tests by doing
@@ -38,19 +58,6 @@ CUDA_VISIBLE_DEVICES=0 pytest test_finetune.py
 
 this should take a couple of second to run on a singe 3090. Just doing one epoch over 100 data points
 
-## Distributed training
-It is possible to train the model on multiple GPUs. This allows to train the model faster.
-Training on 2x3090 GPUs: 
-
-```bash
-WORLD_SIZE=2 CUDA_VISIBLE_DEVICES=1,2 torchrun --nproc_per_node=2 --master_port=1234 finetune.py --base_model 'yahma/llama-7b-hf' --output_dir './lora-alpaca' --batch_size 128 --micro_batch_size 4 --eval_limit 30 --eval_file user_oriented_instructions.jsonl --wandb_log_model true --wandb_project jerboa --wandb_run_name jerboa-intial-train --wandb_watch gradients  --num_epochs 3
-```
-
-Training on 3x3090 GPUs: 
-
-```bash
-WORLD_SIZE=3 CUDA_VISIBLE_DEVICES=0,1,2 torchrun --nproc_per_node=3 --master_port=1234 finetune.py --base_model 'yahma/llama-7b-hf' --output_dir './lora-alpaca' --batch_size 128 --micro_batch_size 4 --eval_limit 30 --eval_file user_oriented_instructions.jsonl --wandb_log_model true --wandb_project jerboa --wandb_run_name jerboa-intial-train --wandb_watch gradients  --num_epochs 3
-```
 
 ## Evaluation
 To run evaluation you first need an evaluation file or dataset.
