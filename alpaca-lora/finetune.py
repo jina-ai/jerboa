@@ -100,7 +100,8 @@ def train(
     lora_alpha: int = 16,
     lora_dropout: float = 0.05,
     lora_target_modules: List[str] = [
-        'query_key_value',
+        'q_proj',
+        'v_proj',
     ],
     load_in_4bit=False,
     # llm hyperparams
@@ -118,7 +119,7 @@ def train(
     debug: bool = False,
     n_samples: Optional[int] = None,
     # debug mode this put all other parameters to a really low value so that we can quickly figure out if the code is
-    # running proprely or not
+    # running properly or not
     eval_file: str = "",  # path to file you want to evaluate on
     eval_limit: int = 0,  # limit the number of instructions to evaluate on
 ):
@@ -173,7 +174,7 @@ def train(
         gradient_accumulation_steps = gradient_accumulation_steps // world_size
 
     # Check if parameter passed or if set within environ
-    use_wandb = use_wandb and (
+    use_wandb: bool = use_wandb and (
         len(wandb_project) > 0
         or ("WANDB_PROJECT" in os.environ and len(os.environ["WANDB_PROJECT"]) > 0)
     )
@@ -220,7 +221,8 @@ def train(
     # Debugging model with smaller footprint, initialize model and save weights
     if debug:
         debug_model = AutoModelForCausalLM.from_config(
-            model_config, **{'trust_remote_code': True}
+            model_config,
+            trust_remote_code=True,
         )
         debug_model.save_pretrained('./trash/empty_model')
 
@@ -371,7 +373,7 @@ def train(
             load_best_model_at_end=True if val_set_size > 0 else False,
             ddp_find_unused_parameters=False if ddp else None,
             group_by_length=group_by_length,
-            report_to="wandb" if use_wandb else 'none',
+            report_to='none' if not use_wandb else "wandb",
             run_name=wandb_run_name if use_wandb else None,
         ),
         data_collator=transformers.DataCollatorForSeq2Seq(
