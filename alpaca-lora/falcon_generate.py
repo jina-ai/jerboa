@@ -1,8 +1,8 @@
 import json
 
-from transformers import AutoTokenizer
-import transformers
 import torch
+import transformers
+from transformers import AutoTokenizer
 from utils.prompter import Prompter
 
 model = "tiiuae/falcon-7b-instruct"
@@ -24,7 +24,9 @@ with open('eval.jsonl', 'r') as f:
 
 for i, eval_instance in enumerate(eval_data):
     print(i)
-    prompt = prompter.generate_prompt(eval_instance["instruction"], eval_instance["instances"][0]["input"])
+    prompt = prompter.generate_prompt(
+        eval_instance["instruction"], eval_instance["instances"][0]["input"]
+    )
     sequences = pipeline(
         prompt,
         max_length=200,
