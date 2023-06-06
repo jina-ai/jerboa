@@ -24,7 +24,7 @@ from transformers import (
     LlamaForCausalLM,
     LlamaTokenizer,
 )
-from utils.llama_config import low_footprint_config
+from utils.model_config import low_footprint_config, low_footprint_general
 from utils.prompter import Prompter
 
 
@@ -77,9 +77,76 @@ def load_model_tokenizer(
 
     model.config.pad_token_id = tokenizer.pad_token_id = 0  # unk
 
-    # floatt16 only available on gpu, do not half model for cpu
+    # float16 only available on gpu, do not half model for cpu
     if not load_8bit and device == "cuda":
         model.half()  # seems to fix bugs for some users.
+
+    return model, tokenizer
+
+
+def load_model_tokenizer1(
+    base_model: str,
+    device_map: dict,
+    lora_config: dict,
+    debug: bool = False,
+    load_in_4bit=False,
+) -> Tuple[torch.nn.Module, transformers.PreTrainedTokenizer]:
+
+    device = 'cuda' if torch.cuda.is_available() else 'cpu'
+    load_in_8bit = True if not load_in_4bit else False
+
+    # No quantization available on cpu
+    if device == 'cpu' and (load_in_4bit):
+        raise Exception("Quantization (4bit and 8bit) does not work on cpu")
+
+    # Load small memory config for llama in debugging model
+    low_footprint_model_config = low_footprint_general
+
+    if debug:
+        model_config = AutoConfig.from_pretrained(
+            base_model, **low_footprint_model_config
+        )
+        debug_model = AutoModelForCausalLM.from_config(
+            model_config,
+            trust_remote_code=True,
+        )
+        debug_model.save_pretrained('./trash/empty_model')
+    else:
+        model_config = AutoConfig.from_pretrained(base_model, trust_remote_code=True)
+
+    quant_config = BitsAndBytesConfig(
+        load_in_4bit=load_in_4bit,
+        load_in_8bit=load_in_8bit,
+        bnb_4bit_use_double_quant=True,
+        bnb_4bit_quant_type="nf4",
+        bnb_4bit_compute_dtype=torch.float16,
+    )
+    quant_config = quant_config if device == "cuda" else None
+    model = base_model if not debug else './trash/empty_model'
+
+    # Instantiate Llama model either from base model or from empty model
+    model = AutoModelForCausalLM.from_pretrained(
+        pretrained_model_name_or_path=model,
+        torch_dtype=torch.float16,
+        device_map=device_map,
+        config=model_config,
+        quantization_config=quant_config,
+        trust_remote_code=True,
+    )
+
+    # Move model to cpu in debugging mode
+    if debug and device == "cpu":
+        model = model.to(device)
+
+    # Prepare model for training
+    model = prepare_model_for_kbit_training(model)
+    lora_config = LoraConfig(**lora_config)
+    model = get_peft_model(model, lora_config)
+
+    # Tokenizer
+    tokenizer = AutoTokenizer.from_pretrained(base_model)
+    tokenizer.pad_token_id = 0  # unk. we want this to be different from the eos token
+    tokenizer.padding_side = "left"  # Allow batched inference
 
     return model, tokenizer
 
