@@ -87,13 +87,12 @@ def load_model_tokenizer1(
     base_model: str,
     device_map: dict,
     lora_config: dict,
+    device: str,
     debug: bool = False,
     load_in_4bit: object = False,
 ) -> Tuple[torch.nn.Module, transformers.PreTrainedTokenizer]:
 
-    device = 'cuda' if torch.cuda.is_available() else 'cpu'
     load_in_8bit = True if not load_in_4bit else False
-
     # No quantization available on cpu
     if device == 'cpu' and (load_in_4bit):
         raise Exception("Quantization (4bit and 8bit) does not work on cpu")
@@ -142,7 +141,9 @@ def load_model_tokenizer1(
     model = get_peft_model(model, lora_config)
 
     # Tokenizer
-    tokenizer = AutoTokenizer.from_pretrained(base_model)
+    tokenizer = AutoTokenizer.from_pretrained(
+        base_model, use_fast=False
+    )  # use_fast=False
     tokenizer.pad_token_id = 0  # unk. we want this to be different from the eos token
     tokenizer.padding_side = "left"  # Allow batched inference
 
@@ -234,7 +235,7 @@ def train(
 
     device_map = "auto"
     world_size = int(os.environ.get("WORLD_SIZE", 1))
-    ddp = world_size != 1
+    ddp: bool = world_size != 1
     if ddp:
         device_map = {"": int(os.environ.get("LOCAL_RANK") or 0)}
         gradient_accumulation_steps = gradient_accumulation_steps // world_size
@@ -271,6 +272,7 @@ def train(
 
     model, tokenizer = load_model_tokenizer1(
         base_model=base_model,
+        device=device,
         device_map=device_map,
         lora_config=_lora_config,
         debug=debug,
@@ -327,8 +329,6 @@ def train(
     else:
         data = load_dataset(data_path)
 
-    model.print_trainable_parameters()  # Be more transparent about the % of trainable params.
-
     if debug:
         train_data = data["train"].select(range(10)).map(generate_and_tokenize_prompt)
         val_data = None
@@ -344,6 +344,8 @@ def train(
 
     if n_samples:
         train_data = train_data.select(range(n_samples))
+
+    model.print_trainable_parameters()  # Be more transparent about the % of trainable params.
 
     if not ddp and torch.cuda.device_count() > 1:
         # keeps Trainer from trying its own DataParallelism when more than 1 gpu is available
@@ -398,7 +400,6 @@ def train(
         if wandb_log_model and use_wandb:
             artifact = wandb.Artifact(name='lora_weight', type='model')
             artifact.add_dir(lora_dir)
-
             run.log_artifact(artifact)
 
         if eval_file:
