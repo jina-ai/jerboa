@@ -141,9 +141,7 @@ def load_model_tokenizer1(
     model = get_peft_model(model, lora_config)
 
     # Tokenizer
-    tokenizer = AutoTokenizer.from_pretrained(
-        base_model, use_fast=False
-    )  # use_fast=False
+    tokenizer = AutoTokenizer.from_pretrained(base_model, use_fast=False)
     tokenizer.pad_token_id = 0  # unk. we want this to be different from the eos token
     tokenizer.padding_side = "left"  # Allow batched inference
 
