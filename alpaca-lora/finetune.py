@@ -28,6 +28,7 @@ from utils.llama_config import low_footprint_config
 from utils.prompter import Prompter
 
 
+# Unused function
 def load_model_tokenizer(
     base_model: str = "yahma/llama-7b-hf",
     lora_weights: str = "tloen/alpaca-lora-7b",
@@ -196,7 +197,7 @@ def train(
     if device == 'cpu' and (load_in_4bit):
         raise Exception("Quantization (4bit and 8bit) does not work on cpu")
 
-    # Define quanitization
+    # Define quantization
     quant_config = BitsAndBytesConfig(
         load_in_4bit=load_in_4bit,
         load_in_8bit=load_in_8bit,
