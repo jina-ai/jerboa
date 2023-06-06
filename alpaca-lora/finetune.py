@@ -101,7 +101,7 @@ def load_model_tokenizer1(
     if debug:
         low_footprint_model_config = low_footprint_general
         model_config = AutoConfig.from_pretrained(
-            base_model, **low_footprint_model_config
+            base_model, trust_remote_code=True, **low_footprint_model_config
         )
         debug_model = AutoModelForCausalLM.from_config(
             model_config,
@@ -150,7 +150,7 @@ def load_model_tokenizer1(
 
 def train(
     # model/data params
-    base_model: str = "yahma/llama-7b-hf",
+    base_model: str = "tiiuae/falcon-7b",
     data_path: str = "yahma/alpaca-cleaned",
     output_dir: str = "./lora-alpaca",
     # training hyperparams
@@ -165,8 +165,7 @@ def train(
     lora_alpha: int = 16,
     lora_dropout: float = 0.05,
     lora_target_modules: List[str] = [
-        'q_proj',
-        'v_proj',
+        'query_key_value',
     ],
     load_in_4bit=False,
     # llm hyperparams
