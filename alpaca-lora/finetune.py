@@ -105,7 +105,8 @@ def train(
     lora_alpha: int = 16,
     lora_dropout: float = 0.05,
     lora_target_modules: List[str] = [
-        'query_key_value',
+        "q_proj",
+        "v_proj",
     ],
     load_in_4bit=False,
     # llm hyperparams

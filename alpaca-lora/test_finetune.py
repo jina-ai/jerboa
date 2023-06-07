@@ -16,7 +16,8 @@ lora_r: int = 8
 lora_alpha: int = 16
 lora_dropout: float = 0.05
 lora_target_modules = [
-    'query_key_value',
+    "q_proj",
+    "v_proj",
 ]
 _lora_config = {
     'r': lora_r,
@@ -30,7 +31,7 @@ _lora_config = {
 
 def test_eval():
     model, tokenizer = load_model_tokenizer(
-        base_model='decapoda-research/llama-7b-hf',
+        base_model='yahma/llama-7b-hf',
         device_map="auto",
         debug=True,
         device='cuda' if torch.cuda.is_available() else 'cpu',
