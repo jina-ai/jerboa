@@ -94,7 +94,7 @@ def load_model_tokenizer1(
 
     load_in_8bit = True if not load_in_4bit else False
     # No quantization available on cpu
-    if device == 'cpu' and (load_in_4bit):
+    if device == 'cpu' and load_in_4bit:
         raise Exception("Quantization (4bit and 8bit) does not work on cpu")
 
     # Load small memory config for llama in debugging model
@@ -180,10 +180,8 @@ def train(
     wandb_log_model: bool = True,  # options: false | true
     resume_from_checkpoint: str = None,  # either training checkpoint or final adapter
     prompt_template_name: str = "alpaca",  # The prompt template to use, will default to alpaca.
-    debug: bool = False,
+    debug: bool = False,  # Debug mode to load a small model for quick debugging
     n_samples: Optional[int] = None,
-    # debug mode this put all other parameters to a really low value so that we can quickly figure out if the code is
-    # running properly or not
     eval_file: str = "",  # path to file you want to evaluate on
     eval_limit: int = 0,  # limit the number of instructions to evaluate on
 ):
@@ -371,7 +369,7 @@ def train(
             load_best_model_at_end=True if val_set_size > 0 else False,
             ddp_find_unused_parameters=False if ddp else None,
             group_by_length=group_by_length,
-            report_to='none' if not use_wandb else "wandb",
+            report_to="wandb" if use_wandb else "none",
             run_name=wandb_run_name if use_wandb else None,
         ),
         data_collator=transformers.DataCollatorForSeq2Seq(
