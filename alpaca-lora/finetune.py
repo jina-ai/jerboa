@@ -10,7 +10,6 @@ from datasets import load_dataset
 from evaluate import evaluate
 from peft import (
     LoraConfig,
-    PeftModel,
     get_peft_model,
     get_peft_model_state_dict,
     prepare_model_for_kbit_training,
@@ -20,70 +19,12 @@ from transformers import (
     AutoModelForCausalLM,
     AutoTokenizer,
     BitsAndBytesConfig,
-    LlamaForCausalLM,
-    LlamaTokenizer,
 )
-from utils.model_config import low_footprint_config, low_footprint_general
+from utils.model_config import low_footprint_general
 from utils.prompter import Prompter
 
 
-# Unused function
 def load_model_tokenizer(
-    base_model: str = "yahma/llama-7b-hf",
-    lora_weights: str = "tloen/alpaca-lora-7b",
-    load_8bit: bool = False,
-    debug: bool = False,
-    device: str = 'cuda',
-) -> Tuple[torch.nn.Module, transformers.PreTrainedTokenizer]:
-    assert (
-        base_model
-    ), "Please specify a --base_model or model, e.g. --base_model='huggyllama/llama-7b'"
-
-    if debug:
-        base_model = "yahma/llama-7b-hf"
-
-    tokenizer = LlamaTokenizer.from_pretrained(base_model)
-    # Default configurations
-    llama_args = {
-        "torch_dtype": torch.float16 if device == "cuda" else torch.float32,
-        "device_map": {"": device},
-    }
-    peft_args = {
-        "model_id": lora_weights,
-        "torch_dtype": torch.float16 if device == "cuda" else torch.float32,
-        "device_map": {"": device},
-    }
-
-    # Conditional configurations
-    if device == "cuda":
-        llama_args.update({"load_in_8bit": load_8bit, "device_map": "auto"})
-    elif device == "mps":
-        pass  # No changes needed
-    else:
-        llama_args["low_cpu_mem_usage"] = True
-
-    # Instantiate models
-    if debug:
-        # Debugging configuration for the Llama model, reduces parameters
-        # If a gpu is available the model will run on the gpu, otherwise cpu
-        # device = 'cuda' if torch.cuda.is_available() else 'cpu'
-        llama_config = low_footprint_config
-        model = LlamaForCausalLM(llama_config).to(device)
-    else:
-        model = LlamaForCausalLM.from_pretrained(base_model, **llama_args)
-
-    model = PeftModel.from_pretrained(model, **peft_args)
-
-    model.config.pad_token_id = tokenizer.pad_token_id = 0  # unk
-
-    # float16 only available on gpu, do not half model for cpu
-    if not load_8bit and device == "cuda":
-        model.half()  # seems to fix bugs for some users.
-
-    return model, tokenizer
-
-
-def load_model_tokenizer1(
     base_model: str,
     device_map: dict,
     lora_config: dict,
@@ -265,7 +206,7 @@ def train(
         'task_type': "CAUSAL_LM",
     }
 
-    model, tokenizer = load_model_tokenizer1(
+    model, tokenizer = load_model_tokenizer(
         base_model=base_model,
         device=device,
         device_map=device_map,
