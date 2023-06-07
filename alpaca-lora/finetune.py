@@ -90,7 +90,7 @@ def load_model_tokenizer(
 
 def train(
     # model/data params
-    base_model: str = "tiiuae/falcon-7b",
+    base_model: str = "yahma/llama-7b-hf",
     data_path: str = "yahma/alpaca-cleaned",
     output_dir: str = "./lora-alpaca",
     # training hyperparams
