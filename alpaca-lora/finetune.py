@@ -32,7 +32,6 @@ def load_model_tokenizer(
     debug: bool = False,
     load_in_4bit: object = False,
 ) -> Tuple[torch.nn.Module, transformers.PreTrainedTokenizer]:
-
     load_in_8bit = True if not load_in_4bit else False
     # No quantization available on cpu
     if device == 'cpu' and load_in_4bit:
