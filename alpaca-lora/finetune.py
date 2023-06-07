@@ -35,7 +35,7 @@ def load_model_tokenizer(
     load_in_8bit = True if not load_in_4bit else False
     # No quantization available on cpu
     if device == 'cpu' and load_in_4bit:
-        raise Exception("Quantization (4bit and 8bit) does not work on cpu")
+        raise ValueError("Quantization (4bit and 8bit) does not work on cpu")
 
     # Load small memory config for llama in debugging model
     if debug:
