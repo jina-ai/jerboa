@@ -46,7 +46,6 @@ RUN pip install torch
 RUN rm poetry.lock
 RUN rm pyproject.toml
 
-RUN yes | apt install screen nvtop neovim zsh
 RUN chsh -s ~/.zshrc
 
 RUN curl -fsSL https://starship.rs/install.sh | sh -s -- -y
@@ -57,7 +56,8 @@ RUN type -p curl >/dev/null || (apt update && apt install curl -y) && \
     chmod go+r /usr/share/keyrings/githubcli-archive-keyring.gpg && \
     echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" | tee /etc/apt/sources.list.d/github-cli.list > /dev/null && \
     apt update && \
-    apt install gh -y
+    apt install nvtop gh neovim screen -y
+
 
 
 # EXPOSE 8888 MAYBE RELEVANT
