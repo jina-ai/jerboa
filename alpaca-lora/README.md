@@ -43,7 +43,7 @@ WORLD_SIZE=3 CUDA_VISIBLE_DEVICES=0,1,2 torchrun --nproc_per_node=3 --master_por
 ## Training Datasets
 Currently, the training pipeline supports 2 training datasets:
 - `yahma/alpaca-cleaned`: cleaned version of the alpaca dataset, available on the HF datasets hub. This is the used dataset by default
-  - `code_alpaca_20k.json`: a dataset of 20k code snippets, available locally. To use this dataset, specify the following parameter in the training command: `--data_path ./code_alpaca_20k.json`
+  - `"sahil2801/CodeAlpaca-20k"`: a dataset of 20k code snippets, available on the HF datasets hub. To use this dataset, specify the following parameter in the training command: `--data_path "sahil2801/CodeAlpaca-20k"`
 
 
 ## Tests
