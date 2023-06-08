@@ -109,9 +109,6 @@ def train(
         "v_proj",
         "k_proj",
         "o_proj",
-        "gate_proj",
-        "down_proj",
-        "up_proj",
     ],
     load_in_4bit=False,
     # llm hyperparams
