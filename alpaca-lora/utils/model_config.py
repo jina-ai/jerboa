@@ -7,3 +7,9 @@ low_footprint_config = LlamaConfig(
     num_hidden_layers=1,
     num_attention_heads=1,
 )
+
+low_footprint_general = {
+    'intermediate_size': 64,
+    'num_hidden_layers': 1,
+    'num_attention_heads': 1,
+}
