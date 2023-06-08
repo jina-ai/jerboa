@@ -6,7 +6,7 @@ import fire
 import torch
 import transformers
 import wandb
-from datasets import load_dataset
+from data_processing import load_train_val_data
 from evaluate import evaluate
 from peft import (
     LoraConfig,
@@ -14,7 +14,6 @@ from peft import (
     get_peft_model_state_dict,
     prepare_model_for_kbit_training,
 )
-from preprocessing import PREPROCESSORS, PREPROCESSORS_MAP
 from transformers import (
     AutoConfig,
     AutoModelForCausalLM,
@@ -93,6 +92,7 @@ def train(
     # model/data params
     base_model: str = "yahma/llama-7b-hf",
     data_path: str = "yahma/alpaca-cleaned",
+    data_files: Optional[str] = None,
     output_dir: str = "./lora-alpaca",
     # training hyperparams
     batch_size: int = 128,
@@ -262,31 +262,17 @@ def train(
             ]  # could be sped up, probably
         return tokenized_full_prompt
 
-    if data_path.endswith(".json") or data_path.endswith(".jsonl"):
-        data = load_dataset("json", data_files=data_path)
-    else:
-        data = load_dataset(data_path)
-
-    preprocessor = (
-        PREPROCESSORS.get(dataset_preprocessor, None) or PREPROCESSORS_MAP[data_path]
+    train_data, val_data = load_train_val_data(
+        data_path=data_path,
+        data_files=data_files,
+        dataset_preprocessor=dataset_preprocessor,
+        val_set_size=val_set_size,
+        n_samples=n_samples,
+        debug=debug,
     )
-    data = preprocessor(data)
-
-    if debug:
-        train_data = data["train"].select(range(10)).map(generate_and_tokenize_prompt)
-        val_data = None
-    elif val_set_size > 0:
-        train_val = data["train"].train_test_split(
-            test_size=val_set_size, shuffle=True, seed=42
-        )
-        train_data = train_val["train"].shuffle().map(generate_and_tokenize_prompt)
-        val_data = train_val["test"].shuffle().map(generate_and_tokenize_prompt)
-    else:
-        train_data = data["train"].shuffle().map(generate_and_tokenize_prompt)
-        val_data = None
-
-    if n_samples:
-        train_data = train_data.select(range(n_samples))
+    train_data = train_data.map(generate_and_tokenize_prompt)
+    if val_data:
+        val_data = val_data.map(generate_and_tokenize_prompt)
 
     model.print_trainable_parameters()  # Be more transparent about the % of trainable params.
 
