@@ -46,6 +46,8 @@ RUN pip install torch
 RUN rm poetry.lock
 RUN rm pyproject.toml
 
+RUN yes | apt install screen
+
 RUN curl -fsSL https://starship.rs/install.sh | sh -s -- -y
 RUN echo 'eval "$(starship init bash)"' >> ~/.bashrc
 
