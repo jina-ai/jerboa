@@ -14,6 +14,7 @@ from peft import (
     get_peft_model_state_dict,
     prepare_model_for_kbit_training,
 )
+from preprocessing import PREPROCESSORS, PREPROCESSORS_MAP
 from transformers import (
     AutoConfig,
     AutoModelForCausalLM,
@@ -125,6 +126,7 @@ def train(
     n_samples: Optional[int] = None,
     eval_file: str = "",  # path to file you want to evaluate on
     eval_limit: int = 0,  # limit the number of instructions to evaluate on
+    dataset_preprocessor: str = 'default',  # name of the dataset_preprocessor
 ):
     if debug:
         batch_size = 2
@@ -264,6 +266,11 @@ def train(
         data = load_dataset("json", data_files=data_path)
     else:
         data = load_dataset(data_path)
+
+    preprocessor = (
+        PREPROCESSORS.get(dataset_preprocessor, None) or PREPROCESSORS_MAP[data_path]
+    )
+    data = preprocessor(data)
 
     if debug:
         train_data = data["train"].select(range(10)).map(generate_and_tokenize_prompt)
