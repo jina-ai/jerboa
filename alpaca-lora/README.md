@@ -18,6 +18,8 @@ To use the docker container run the following commands whilst being in the jerbo
 docker build -t <your tag> .
 ```
 
+If you want to run the latest pushed version on Dockerhub, use the following command. Alternatively you can specify your own docker image by using the tag from `docker build`. 
+
 ```bash
 docker run -it --entrypoint bash sebastianjina/jerboa_1:latest
 ```
