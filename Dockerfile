@@ -58,8 +58,4 @@ RUN type -p curl >/dev/null || (apt update && apt install curl -y) && \
     apt update && \
     apt install nvtop gh neovim screen -y
 
-
-
-# EXPOSE 8888 MAYBE RELEVANT
-
 CMD ["bash", "-c", "sleep infinity"]
