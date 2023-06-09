@@ -177,7 +177,10 @@ def train(
     if use_wandb:
         os.environ["WANDB_PROJECT"] = wandb_project
         if is_master_process:
-            run = wandb.init(wandb_project, config=config_to_log, name=wandb_run_name)
+            init_conf = dict(config=config_to_log)
+            if len(wandb_run_name) > 0:
+                init_conf["name"] = wandb_run_name
+            run = wandb.init(wandb_project, **init_conf)
     else:
         os.environ["WANDB_MODE"] = "disabled"
     if use_wandb and len(wandb_watch) > 0:
