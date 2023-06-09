@@ -85,7 +85,7 @@ CUDA_VISIBLE_DEVICES=2 \
 python finetune.py \
   --base_model 'yahma/llama-7b-hf' \
   --lora_target_modules "[q_proj, v_proj]" \
-  --data_path 'yahma/alpaca-cleaned' \
+  --data_path <Your-data-path> \
   --output_dir './lora-alpaca' \
   --wandb_project 'jerboa' \
   --wandb_run_name 'test-run' \
