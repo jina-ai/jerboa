@@ -11,6 +11,22 @@ the rest of this readme is the original README from the repo.
 
 !!! To follow the rest be sure to have enabled your virtual env with poetry by looking at the top root README.md 
 
+## Docker
+To use the docker container run the following commands whilst being in the jerboa root repository
+
+```bash
+docker build -t <your tag> .
+```
+
+If you want to run the latest pushed version on Dockerhub, use the following command. Alternatively you can specify your own docker image by using the tag from `docker build`. 
+
+```bash
+docker run -it --entrypoint bash sebastianjina/jerboa_1:latest
+```
+
+In the docker container you have to use `gh auth login` and `gh repo clone jina-ai/jerboa` to clone the project repo.
+You can now run all the tests and finetuning explained below.
+
 
 ### debug mode
 
@@ -60,10 +76,9 @@ this should take a couple of second to run on a singe 3090. Just doing one epoch
 
 
 
-### Alpaca
-
-### Falcon
-You need to specify the target `lora_target_modules` as `query_key_value` to use PEFT. 
+### Target modules
+You need to specify the target `lora_target_modules` as for each different model that is used. For Falcon 7b `lora_target_modules=["query_key_value"]`
+For Llama 7b `lora_target_modules=["q_proj", "v_proj"]`. 
 
 ## Evaluation
 To run evaluation you first need an evaluation file or dataset.
@@ -85,6 +100,7 @@ To run evaluation after finetuning you can use the following command:
 CUDA_VISIBLE_DEVICES=2 \
 python finetune.py \
   --base_model 'yahma/llama-7b-hf' \
+  --lora_target_modules "[q_proj, v_proj]" \
   --data_path <Your-data-path> \
   --output_dir './lora-alpaca' \
   --wandb_project 'jerboa' \
