@@ -11,6 +11,20 @@ the rest of this readme is the original README from the repo.
 
 !!! To follow the rest be sure to have enabled your virtual env with poetry by looking at the top root README.md 
 
+## Docker
+To use the docker container run the following commands whilst being in the jerboa root repository
+
+```bash
+docker build -t <your tag> .
+```
+
+```bash
+docker run -it --entrypoint bash sebastianjina/jerboa_1:latest
+```
+
+In the docker container you have to use `gh auth login` and `gh repo clone jina-ai/jerboa` to clone the project repo.
+You can now run all the tests and finetuning explained below.
+
 
 ### debug mode
 
