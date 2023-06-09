@@ -15,7 +15,7 @@ def load_train_val_data(
     if data_path.endswith(".json") or data_path.endswith(".jsonl"):
         data = load_dataset("json", data_files=data_path)
     else:
-        data = load_dataset(data_path, data_files)
+        data = load_dataset(data_path, data_files=data_files)
 
     preprocessor = (
         PREPROCESSORS.get(dataset_preprocessor, None)
