@@ -1,9 +1,8 @@
 import functools
 import os
 import sys
-from typing import List, Optional, Tuple, Dict
+from typing import Dict, List, Optional, Tuple
 
-from typer import Typer
 import torch
 import transformers
 import wandb
@@ -21,11 +20,11 @@ from transformers import (
     AutoTokenizer,
     BitsAndBytesConfig,
 )
+from typer import Typer
 from utils.model_config import low_footprint_general
 from utils.prompter import Prompter
 
 is_master_process = int(os.environ.get("LOCAL_RANK", 0)) == 0
-
 
 
 def load_model_tokenizer(
@@ -92,8 +91,9 @@ def load_model_tokenizer(
     return model, tokenizer
 
 
-
 config_to_log: Dict = {}
+
+
 def log_args():
     def decorator(func):
         @functools.wraps(func)
@@ -102,9 +102,10 @@ def log_args():
                 global config_to_log
                 config_to_log = kwargs
             return func(*args, **kwargs)
-        return wrapper
-    return decorator
 
+        return wrapper
+
+    return decorator
 
 
 app = Typer()
@@ -132,7 +133,7 @@ def train(
         "q_proj",
         "v_proj",
     ],
-    load_in_4bit:bool =False,
+    load_in_4bit: bool = False,
     # llm hyperparams
     train_on_inputs: bool = True,  # if False, masks out inputs in loss
     add_eos_token: bool = False,
