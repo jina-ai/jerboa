@@ -1,9 +1,9 @@
+import multiprocessing as mp
 from collections import defaultdict
 from typing import Optional
 
 from datasets import Dataset, DatasetDict, load_dataset
 from tqdm import tqdm
-import multiprocessing as mp
 
 
 def load_train_val_data(
@@ -43,6 +43,7 @@ def load_train_val_data(
 
     return train_data, val_data
 
+
 def process_element_redpajamas_ni_to_alpaca_format(element):
     output_dict = {}
     if len(element['definition']) > 0 and len(element['targets']) > 0:
@@ -51,9 +52,16 @@ def process_element_redpajamas_ni_to_alpaca_format(element):
         output_dict['output'] = element['targets'][0]
     return output_dict
 
+
 def redpajamas_ni_to_alpaca_format(dataset: DatasetDict) -> DatasetDict:
     with mp.Pool(8) as pool:
-        output_list = list(pool.imap(process_element_redpajamas_ni_to_alpaca_format, tqdm(dataset['train']), chunksize=5000))
+        output_list = list(
+            pool.imap(
+                process_element_redpajamas_ni_to_alpaca_format,
+                tqdm(dataset['train']),
+                chunksize=5000,
+            )
+        )
     return DatasetDict({'train': Dataset.from_list(output_list)})
 
 
@@ -64,9 +72,16 @@ def process_element_redpajamas_p3_to_alpaca_format(element):
     output_dict['output'] = element['targets']
     return output_dict
 
+
 def redpajamas_p3_to_alpaca_format(dataset: DatasetDict) -> DatasetDict:
     with mp.Pool(8) as pool:
-        output_list = list(pool.imap(process_element_redpajamas_p3_to_alpaca_format, tqdm(dataset['train']), chunksize=5000))
+        output_list = list(
+            pool.imap(
+                process_element_redpajamas_p3_to_alpaca_format,
+                tqdm(dataset['train']),
+                chunksize=5000,
+            )
+        )
     return DatasetDict({'train': Dataset.from_list(output_list)})
 
 
