@@ -18,4 +18,4 @@ screen -dm eval "$1"
 echo training done
 
 #Stop the runpod instance
-runpodctl stop pod $RUNPOD_POD_ID
+# runpodctl stop pod $RUNPOD_POD_ID
