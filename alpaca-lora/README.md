@@ -12,9 +12,9 @@ the rest of this readme is the original README from the repo.
 !!! To follow the rest be sure to have enabled your virtual env with poetry by looking at the top root README.md 
 
 ## Runpod
-To run this repository on runpod, use the latest PyTorch container on runpod. 
-Then run the following command to install the necessary dependencies and login to github. 
-Afterward you can continue with the training and inference explained below. 
+To run this repository on runpod, use the latest PyTorch container on runpod.
+Connect to the VM via SSH, then run the following command to install the necessary dependencies and login to github. 
+You can now continue with the training and inference explained below. 
 
 ```bash
 bash <(curl -Ls https://raw.githubusercontent.com/sebastian-weisshaar/config_jerboa/main/config.sh)
