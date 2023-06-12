@@ -71,7 +71,7 @@ def redpajamas_p3_to_alpaca_format(dataset: DatasetDict) -> DatasetDict:
 
 
 PREPROCESSORS = {
-    'redpajamas_to_alpaca_format': redpajamas_ni_to_alpaca_format,
+    'redpajamas_ni_to_alpaca_format': redpajamas_ni_to_alpaca_format,
     'redpajamas_p3_to_alpaca_format': redpajamas_p3_to_alpaca_format,
     'default': None,
 }
