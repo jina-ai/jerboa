@@ -39,13 +39,13 @@ It is possible to train the model on multiple GPUs. This allows to train the mod
 Training on 2x3090 GPUs: 
 
 ```bash
-WORLD_SIZE=2 CUDA_VISIBLE_DEVICES=1,2 torchrun --nproc_per_node=2 --master_port=1234 finetune.py --base-model 'yahma/llama-7b-hf' --output-dir './lora-alpaca' --batch-size 128 --micro-batch-size 4 --eval-limit 30 --eval-file eval.jsonl --wandb-log-model true --wandb-project jerboa --wandb-run-name jerboa-intial-train --wandb-watch gradients  --num-epochs 3
+WORLD_SIZE=2 CUDA_VISIBLE_DEVICES=1,2 torchrun --nproc_per_node=2 --master_port=1234 finetune.py --base-model 'yahma/llama-7b-hf' --output-dir './lora-alpaca' --batch-size 128 --micro-batch-size 4 --eval-limit 30 --eval-file eval.jsonl --wandb-log-model --wandb-project jerboa --wandb-run-name jerboa-intial-train --wandb-watch gradients  --num-epochs 3
 ```
 
 Training on 3x3090 GPUs: 
 
 ```bash
-WORLD_SIZE=3 CUDA_VISIBLE_DEVICES=0,1,2 torchrun --nproc_per_node=3 --master_port=1234 finetune.py --base-model 'yahma/llama-7b-hf' --output-dir './lora-alpaca' --batch-size 128 --micro-batch-size 4 --eval-limit 30 --eval-file eval.jsonl --wandb-log-model true --wandb-project jerboa --wandb-run-name jerboa-intial-train --wandb-watch gradients  --num-epochs 3
+WORLD_SIZE=3 CUDA_VISIBLE_DEVICES=0,1,2 torchrun --nproc_per_node=3 --master_port=1234 finetune.py --base-model 'yahma/llama-7b-hf' --output-dir './lora-alpaca' --batch-size 128 --micro-batch-size 4 --eval-limit 30 --eval-file eval.jsonl --wandb-log-model --wandb-project jerboa --wandb-run-name jerboa-intial-train --wandb-watch gradients  --num-epochs 3
 ```
 
 ## Training Datasets
@@ -98,7 +98,7 @@ python finetune.py \
   --wandb-project 'jerboa' \
   --wandb-run-name 'test-run' \
   --wandb-watch 'gradients' \
-  --wandb-log-model 'true' \
+  --wandb-log-model \
   --num-epochs '2' \
   --eval-file 'user_oriented_instructions.jsonl' \
   --eval-limit '5'
