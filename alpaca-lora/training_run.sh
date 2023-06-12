@@ -1,7 +1,8 @@
 
 # use this script by passing the training argument as string
 # Example:
- :' ./executor "python finetune.py  \
+ : '
+  ./executor "python finetune.py  \
   --base_model yahma/llama-7b-hf \
   --output_dir ./lora-alpaca \
   --batch_size 128 \
