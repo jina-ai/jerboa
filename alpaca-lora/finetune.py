@@ -109,7 +109,7 @@ def log_args():
     return decorator
 
 
-app = Typer()
+app = Typer(pretty_exceptions_enable=False)
 
 
 @app.command()
