@@ -51,9 +51,16 @@ WORLD_SIZE=3 CUDA_VISIBLE_DEVICES=0,1,2 torchrun --nproc_per_node=3 --master_por
 ## Training Datasets
 Currently, the training pipeline supports 2 training datasets:
 - `yahma/alpaca-cleaned`: cleaned version of the alpaca dataset, available on the HF datasets hub. This is the used dataset by default
-  - `code_alpaca_20k.json`: a dataset of 20k code snippets, available locally. To use this dataset, specify the following parameter in the training command: `--data_path ./code_alpaca_20k.json`
+- `sahil2801/CodeAlpaca-20k`: a dataset of 20k code snippets, available on the HF datasets hub. To use this dataset, specify the following parameter in the training command: `--data_path "sahil2801/CodeAlpaca-20k"`
+- `togethercomputer/RedPajama-Data-Instruct`: this dataset is provided by `togethercomputer` and contains 2 subsets:
+  - NI (Natural Instructions): An instruction-tuning dataset comprising a diverse set of tasks in natural languages.
+  To use this dataset, simply add the flags `--data-path togethercomputer/RedPajama-Data-Instruct --data-files data/NI_decontaminated.jsonl.zst`
+  - P3 (Public Pool of Prompts): A large dataset featuring various creative tasks obtained from crowdsourcing efforts.
+  To use this dataset, simply add the flags `--data-path togethercomputer/RedPajama-Data-Instruct --data-files data/P3_decontaminated.jsonl.zst`
 
-
+You can also come up with a different dataset if it follows the alpaca dataset format. If it follows a different format similar to one of the previously supported formats, you can specify one of the existing dataset preprocessors to transform it to alpaca format during training.
+Just add the following flags:
+`--data-path curated_dataset_name --data-files curated_dataset_data_files --dataset-preprocessor redpajamas_ni_to_alpaca_format `
 ## Tests
 
 You can run our tests by doing
