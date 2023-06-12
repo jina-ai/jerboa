@@ -13,7 +13,7 @@
   --num_epochs 3"
 '
 echo starting run
-eval "$1"
+screen -dm eval "$1"
 echo training done
 
 #Stop the runpod instance
