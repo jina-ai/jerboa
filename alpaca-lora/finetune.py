@@ -10,9 +10,10 @@ from datasets import load_dataset
 from evaluate import evaluate
 from peft import (
     LoraConfig,
+    PeftModel,
     get_peft_model,
     get_peft_model_state_dict,
-    prepare_model_for_kbit_training, PeftModel,
+    prepare_model_for_kbit_training,
 )
 from transformers import (
     AutoConfig,
