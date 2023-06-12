@@ -1,7 +1,6 @@
 import json
 from typing import Any, Dict, List
 
-import fire
 import torch
 from transformers import GenerationConfig, PreTrainedTokenizer
 from utils.prompter import Prompter
@@ -83,7 +82,3 @@ def evaluate(
             }
         )
     return results
-
-
-if __name__ == "__main__":
-    fire.Fire(evaluate)

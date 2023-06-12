@@ -11,6 +11,14 @@ the rest of this readme is the original README from the repo.
 
 !!! To follow the rest be sure to have enabled your virtual env with poetry by looking at the top root README.md 
 
+## Runpod
+To run this repository on runpod, use the latest PyTorch container on runpod.
+Connect to the VM via SSH, then run the following command to install the necessary dependencies and login to github. 
+You can now continue with the training and inference explained below. 
+
+```bash
+bash <(curl -Ls https://raw.githubusercontent.com/sebastian-weisshaar/config_jerboa/main/config.sh)
+```
 
 ### debug mode
 
@@ -31,13 +39,13 @@ It is possible to train the model on multiple GPUs. This allows to train the mod
 Training on 2x3090 GPUs: 
 
 ```bash
-WORLD_SIZE=2 CUDA_VISIBLE_DEVICES=1,2 torchrun --nproc_per_node=2 --master_port=1234 finetune.py --base_model 'yahma/llama-7b-hf' --output_dir './lora-alpaca' --batch_size 128 --micro_batch_size 4 --eval_limit 30 --eval_file eval.jsonl --wandb_log_model true --wandb_project jerboa --wandb_run_name jerboa-intial-train --wandb_watch gradients  --num_epochs 3
+WORLD_SIZE=2 CUDA_VISIBLE_DEVICES=1,2 torchrun --nproc_per_node=2 --master_port=1234 finetune.py --base-model 'yahma/llama-7b-hf' --output-dir './lora-alpaca' --batch-size 128 --micro-batch-size 4 --eval-limit 30 --eval-file eval.jsonl --wandb-log-model --wandb-project jerboa --wandb-run-name jerboa-intial-train --wandb-watch gradients  --num-epochs 3
 ```
 
 Training on 3x3090 GPUs: 
 
 ```bash
-WORLD_SIZE=3 CUDA_VISIBLE_DEVICES=0,1,2 torchrun --nproc_per_node=3 --master_port=1234 finetune.py --base_model 'yahma/llama-7b-hf' --output_dir './lora-alpaca' --batch_size 128 --micro_batch_size 4 --eval_limit 30 --eval_file eval.jsonl --wandb_log_model true --wandb_project jerboa --wandb_run_name jerboa-intial-train --wandb_watch gradients  --num_epochs 3
+WORLD_SIZE=3 CUDA_VISIBLE_DEVICES=0,1,2 torchrun --nproc_per_node=3 --master_port=1234 finetune.py --base-model 'yahma/llama-7b-hf' --output-dir './lora-alpaca' --batch-size 128 --micro-batch-size 4 --eval-limit 30 --eval-file eval.jsonl --wandb-log-model --wandb-project jerboa --wandb-run-name jerboa-intial-train --wandb-watch gradients  --num-epochs 3
 ```
 
 ## Training Datasets
@@ -67,10 +75,9 @@ this should take a couple of second to run on a singe 3090. Just doing one epoch
 
 
 
-### Alpaca
-
-### Falcon
-You need to specify the target `lora_target_modules` as `query_key_value` to use PEFT. 
+### Target modules
+You need to specify the target `lora_target_modules` as for each different model that is used. For Falcon 7b `lora_target_modules=["query_key_value"]`
+For Llama 7b `lora_target_modules=["q_proj", "v_proj"]`. 
 
 ## Evaluation
 To run evaluation you first need an evaluation file or dataset.
@@ -91,19 +98,20 @@ To run evaluation after finetuning you can use the following command:
 ```bash
 CUDA_VISIBLE_DEVICES=2 \
 python finetune.py \
-  --base_model 'yahma/llama-7b-hf' \
-  --data_path <Your-data-path> \
-  --output_dir './lora-alpaca' \
-  --wandb_project 'jerboa' \
-  --wandb_run_name 'test-run' \
-  --wandb_watch 'gradients' \
-  --wandb_log_model 'true' \
-  --num_epochs '2' \
-  --eval_file 'user_oriented_instructions.jsonl' \
-  --eval_limit '5'
+  --base-model 'yahma/llama-7b-hf' \
+  --lora-target-modules "[q_proj, v_proj]" \
+  --data-path <Your-data-path> \
+  --output-dir './lora-alpaca' \
+  --wandb-project 'jerboa' \
+  --wandb-run-name 'test-run' \
+  --wandb-watch 'gradients' \
+  --wandb-log-model \
+  --num-epochs '2' \
+  --eval-file 'user_oriented_instructions.jsonl' \
+  --eval-limit '5'
 ```
 
---eval_file: path to the evaluation file<br>
---eval_limit: number of examples to evaluate on
+--eval-file: path to the evaluation file<br>
+--eval-limit: number of examples to evaluate on
 
 Evaluation results will be automatically logged to wandb.

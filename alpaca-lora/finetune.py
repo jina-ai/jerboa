@@ -1,8 +1,9 @@
+import functools
 import os
 import sys
-from typing import List, Optional, Tuple
+import uuid
+from typing import Dict, List, Optional, Tuple
 
-import fire
 import torch
 import transformers
 import wandb
@@ -10,6 +11,7 @@ from data_processing import load_train_val_data
 from evaluate import evaluate
 from peft import (
     LoraConfig,
+    PeftModel,
     get_peft_model,
     get_peft_model_state_dict,
     prepare_model_for_kbit_training,
@@ -20,8 +22,11 @@ from transformers import (
     AutoTokenizer,
     BitsAndBytesConfig,
 )
+from typer import Typer
 from utils.model_config import low_footprint_general
 from utils.prompter import Prompter
+
+is_master_process = int(os.environ.get("LOCAL_RANK", 0)) == 0
 
 
 def load_model_tokenizer(
@@ -31,7 +36,7 @@ def load_model_tokenizer(
     device: str,
     debug: bool = False,
     load_in_4bit: object = False,
-) -> Tuple[torch.nn.Module, transformers.PreTrainedTokenizer]:
+) -> Tuple[PeftModel, transformers.PreTrainedTokenizer]:
     load_in_8bit = True if not load_in_4bit else False
     # No quantization available on cpu
     if device == 'cpu' and load_in_4bit:
@@ -88,6 +93,28 @@ def load_model_tokenizer(
     return model, tokenizer
 
 
+config_to_log: Dict = {}
+
+
+def log_args():
+    def decorator(func):
+        @functools.wraps(func)
+        def wrapper(*args, **kwargs):
+            if is_master_process:
+                global config_to_log
+                config_to_log = kwargs
+            return func(*args, **kwargs)
+
+        return wrapper
+
+    return decorator
+
+
+app = Typer(pretty_exceptions_enable=False)
+
+
+@app.command()
+@log_args()
 def train(
     # model/data params
     base_model: str = "yahma/llama-7b-hf",
@@ -106,10 +133,10 @@ def train(
     lora_alpha: int = 16,
     lora_dropout: float = 0.05,
     lora_target_modules: List[str] = [
-        "q_proj",
-        "v_proj",
+        'q_proj',
+        'v_proj',
     ],
-    load_in_4bit=False,
+    load_in_4bit: bool = False,
     # llm hyperparams
     train_on_inputs: bool = True,  # if False, masks out inputs in loss
     add_eos_token: bool = False,
@@ -135,38 +162,6 @@ def train(
         eval_file = 'resources/eval_sample.jsonl'
         eval_limit = 1
 
-    is_master_process = int(os.environ.get("LOCAL_RANK", 0)) == 0
-
-    if is_master_process:
-        params_dict = {
-            "base_model": base_model,
-            "data_path": data_path,
-            "debug:": debug,
-            "n_samples": n_samples,
-            "output_dir": output_dir,
-            "batch_size": batch_size,
-            "micro_batch_size": micro_batch_size,
-            "num_epochs": num_epochs,
-            "learning_rate": learning_rate,
-            "cutoff_len": cutoff_len,
-            "val_set_size": val_set_size,
-            "lora_r": lora_r,
-            "lora_alpha": lora_alpha,
-            "lora_dropout": lora_dropout,
-            "lora_target_modules": lora_target_modules,
-            "train_on_inputs": train_on_inputs,
-            "add_eos_token": add_eos_token,
-            "group_by_length": group_by_length,
-            "wandb_project": wandb_project,
-            "wandb_run_name": wandb_run_name,
-            "wandb_watch": wandb_watch,
-            "wandb_log_model": wandb_log_model,
-            "resume_from_checkpoint": resume_from_checkpoint or False,
-            "prompt template": prompt_template_name,
-        }
-
-        print("Training Alpaca-LoRA model with params:", params_dict)
-
     gradient_accumulation_steps = batch_size // micro_batch_size
 
     prompter = Prompter(prompt_template_name)
@@ -187,7 +182,14 @@ def train(
     if use_wandb:
         os.environ["WANDB_PROJECT"] = wandb_project
         if is_master_process:
-            run = wandb.init(wandb_project)
+            init_conf = dict(config=config_to_log)
+            if len(wandb_run_name) > 0:
+                init_conf["name"] = wandb_run_name
+            else:
+                init_conf[
+                    "name"
+                ] = f"{base_model.replace('/', '-')}-{data_path.replace('/', '-')}-{str(uuid.uuid4())[:5]}"
+            run = wandb.init(wandb_project, **init_conf)
     else:
         os.environ["WANDB_MODE"] = "disabled"
     if use_wandb and len(wandb_watch) > 0:
@@ -196,7 +198,7 @@ def train(
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
     # No quantization available on cpu
-    if device == 'cpu' and (load_in_4bit):
+    if device == 'cpu' and load_in_4bit:
         raise Exception("Quantization (4bit and 8bit) does not work on cpu")
 
     _lora_config = {
@@ -351,4 +353,4 @@ def train(
 
 
 if __name__ == "__main__":
-    fire.Fire(train)
+    app()
