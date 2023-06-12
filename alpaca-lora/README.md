@@ -39,13 +39,13 @@ It is possible to train the model on multiple GPUs. This allows to train the mod
 Training on 2x3090 GPUs: 
 
 ```bash
-WORLD_SIZE=2 CUDA_VISIBLE_DEVICES=1,2 torchrun --nproc_per_node=2 --master_port=1234 finetune.py --base_model 'yahma/llama-7b-hf' --output_dir './lora-alpaca' --batch_size 128 --micro_batch_size 4 --eval_limit 30 --eval_file eval.jsonl --wandb_log_model true --wandb_project jerboa --wandb_run_name jerboa-intial-train --wandb_watch gradients  --num_epochs 3
+WORLD_SIZE=2 CUDA_VISIBLE_DEVICES=1,2 torchrun --nproc_per_node=2 --master_port=1234 finetune.py --base-model 'yahma/llama-7b-hf' --output-dir './lora-alpaca' --batch-size 128 --micro-batch-size 4 --eval-limit 30 --eval-file eval.jsonl --wandb-log-model --wandb-project jerboa --wandb-run-name jerboa-intial-train --wandb-watch gradients  --num-epochs 3
 ```
 
 Training on 3x3090 GPUs: 
 
 ```bash
-WORLD_SIZE=3 CUDA_VISIBLE_DEVICES=0,1,2 torchrun --nproc_per_node=3 --master_port=1234 finetune.py --base_model 'yahma/llama-7b-hf' --output_dir './lora-alpaca' --batch_size 128 --micro_batch_size 4 --eval_limit 30 --eval_file eval.jsonl --wandb_log_model true --wandb_project jerboa --wandb_run_name jerboa-intial-train --wandb_watch gradients  --num_epochs 3
+WORLD_SIZE=3 CUDA_VISIBLE_DEVICES=0,1,2 torchrun --nproc_per_node=3 --master_port=1234 finetune.py --base-model 'yahma/llama-7b-hf' --output-dir './lora-alpaca' --batch-size 128 --micro-batch-size 4 --eval-limit 30 --eval-file eval.jsonl --wandb-log-model --wandb-project jerboa --wandb-run-name jerboa-intial-train --wandb-watch gradients  --num-epochs 3
 ```
 
 ## Training Datasets
@@ -91,20 +91,20 @@ To run evaluation after finetuning you can use the following command:
 ```bash
 CUDA_VISIBLE_DEVICES=2 \
 python finetune.py \
-  --base_model 'yahma/llama-7b-hf' \
-  --lora_target_modules "[q_proj, v_proj]" \
-  --data_path <Your-data-path> \
-  --output_dir './lora-alpaca' \
-  --wandb_project 'jerboa' \
-  --wandb_run_name 'test-run' \
-  --wandb_watch 'gradients' \
-  --wandb_log_model 'true' \
-  --num_epochs '2' \
-  --eval_file 'user_oriented_instructions.jsonl' \
-  --eval_limit '5'
+  --base-model 'yahma/llama-7b-hf' \
+  --lora-target-modules "[q_proj, v_proj]" \
+  --data-path <Your-data-path> \
+  --output-dir './lora-alpaca' \
+  --wandb-project 'jerboa' \
+  --wandb-run-name 'test-run' \
+  --wandb-watch 'gradients' \
+  --wandb-log-model \
+  --num-epochs '2' \
+  --eval-file 'user_oriented_instructions.jsonl' \
+  --eval-limit '5'
 ```
 
---eval_file: path to the evaluation file<br>
---eval_limit: number of examples to evaluate on
+--eval-file: path to the evaluation file<br>
+--eval-limit: number of examples to evaluate on
 
 Evaluation results will be automatically logged to wandb.
