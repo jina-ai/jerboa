@@ -10,6 +10,7 @@ from datasets import load_dataset
 from evaluate import evaluate
 from peft import (
     LoraConfig,
+    PeftModel,
     get_peft_model,
     get_peft_model_state_dict,
     prepare_model_for_kbit_training,
@@ -34,7 +35,7 @@ def load_model_tokenizer(
     device: str,
     debug: bool = False,
     load_in_4bit: object = False,
-) -> Tuple[torch.nn.Module, transformers.PreTrainedTokenizer]:
+) -> Tuple[PeftModel, transformers.PreTrainedTokenizer]:
     load_in_8bit = True if not load_in_4bit else False
     # No quantization available on cpu
     if device == 'cpu' and load_in_4bit:
