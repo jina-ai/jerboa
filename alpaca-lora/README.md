@@ -50,6 +50,9 @@ Currently, the training pipeline supports 2 training datasets:
   - P3 (Public Pool of Prompts): A large dataset featuring various creative tasks obtained from crowdsourcing efforts.
   To use this dataset, simply add the flags `--data_path togethercomputer/RedPajama-Data-Instruct --data_files data/P3_decontaminated.jsonl.zst`
 
+You can also come up with a different dataset if it follows the alpaca dataset format. If it follows a different format similar to one of the previously supported formats, you can specify one of the existing dataset preprocessors to transform it to alpaca format during training.
+Just add the following flags:
+`--data_path curated_dataset_name --data_files curated_dataset_data_files --dataset_preprocessor redpajamas_ni_to_alpaca_format `
 ## Tests
 
 You can run our tests by doing
