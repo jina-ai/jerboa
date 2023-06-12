@@ -1,6 +1,7 @@
 import functools
 import os
 import sys
+import uuid
 from typing import Dict, List, Optional, Tuple
 
 import torch
@@ -181,6 +182,10 @@ def train(
             init_conf = dict(config=config_to_log)
             if len(wandb_run_name) > 0:
                 init_conf["name"] = wandb_run_name
+            else:
+                init_conf[
+                    "name"
+                ] = f"{base_model.replace('/', '-')}-{data_path.replace('/', '-')}-{str(uuid.uuid4())[:5]}"
             run = wandb.init(wandb_project, **init_conf)
     else:
         os.environ["WANDB_MODE"] = "disabled"
