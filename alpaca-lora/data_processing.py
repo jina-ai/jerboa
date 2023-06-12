@@ -46,9 +46,9 @@ def load_train_val_data(
 def process_element_redpajamas_ni_to_alpaca_format(element):
     output_dict = {}
     if len(element['definition']) > 0 and len(element['targets']) > 0:
-        output_dict['instruction'].append(element['definition'][0])
-        output_dict['input'].append(element['inputs'])
-        output_dict['output'].append(element['targets'][0])
+        output_dict['instruction'] = element['definition'][0]
+        output_dict['input'] = element['inputs']
+        output_dict['output'] = element['targets'][0]
     return output_dict
 
 def redpajamas_ni_to_alpaca_format(dataset: DatasetDict) -> DatasetDict:
