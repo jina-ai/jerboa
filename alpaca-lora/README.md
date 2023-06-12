@@ -11,22 +11,14 @@ the rest of this readme is the original README from the repo.
 
 !!! To follow the rest be sure to have enabled your virtual env with poetry by looking at the top root README.md 
 
-## Docker
-To use the docker container run the following commands whilst being in the jerboa root repository
+## Runpod
+To run this repository on runpod, use the latest PyTorch container on runpod.
+Connect to the VM via SSH, then run the following command to install the necessary dependencies and login to github. 
+You can now continue with the training and inference explained below. 
 
 ```bash
-docker build -t <your tag> .
+bash <(curl -Ls https://raw.githubusercontent.com/sebastian-weisshaar/config_jerboa/main/config.sh)
 ```
-
-If you want to run the latest pushed version on Dockerhub, use the following command. Alternatively you can specify your own docker image by using the tag from `docker build`. 
-
-```bash
-docker run -it --entrypoint bash sebastianjina/jerboa_1:latest
-```
-
-In the docker container you have to use `gh auth login` and `gh repo clone jina-ai/jerboa` to clone the project repo.
-You can now run all the tests and finetuning explained below.
-
 
 ### debug mode
 
