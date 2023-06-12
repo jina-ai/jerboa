@@ -2173,7 +2173,7 @@ files = [
 [[package]]
 name = "peft"
 version = "0.4.0.dev0"
-description = ""
+description = "Parameter-Efficient Fine-Tuning (PEFT)"
 category = "main"
 optional = false
 python-versions = ">=3.7.0"
@@ -2189,11 +2189,17 @@ pyyaml = "*"
 torch = ">=1.13.0"
 transformers = "*"
 
+[package.extras]
+dev = ["black (>=22.0,<23.0)", "hf-doc-builder", "ruff (>=0.0.241)", "urllib3 (<=2.0.0)"]
+docs-specific = ["hf-doc-builder"]
+quality = ["black (>=22.0,<23.0)", "ruff (>=0.0.241)", "urllib3 (<=2.0.0)"]
+test = ["black (>=22.0,<23.0)", "datasets", "hf-doc-builder", "parameterized", "pytest", "pytest-xdist", "ruff (>=0.0.241)", "urllib3 (<=2.0.0)"]
+
 [package.source]
 type = "git"
 url = "https://github.com/huggingface/peft.git"
 reference = "HEAD"
-resolved_reference = "3714aa2fff158fdfa637b2b65952580801d890b2"
+resolved_reference = "189a6b8e357ecda05ccde13999e4c35759596a67"
 
 [[package]]
 name = "pexpect"
