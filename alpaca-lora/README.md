@@ -20,16 +20,6 @@ Afterward you can continue with the training and inference explained below.
 bash <(curl -Ls https://raw.githubusercontent.com/sebastian-weisshaar/config_jerboa/main/config.sh)
 ```
 
-If you want to run the latest pushed version on Dockerhub, use the following command. Alternatively you can specify your own docker image by using the tag from `docker build`. 
-
-```bash
-docker run -it --entrypoint bash sebastianjina/jerboa_1:latest
-```
-
-In the docker container you have to use `gh auth login` and `gh repo clone jina-ai/jerboa` to clone the project repo.
-You can now run all the tests and finetuning explained below.
-
-
 ### debug mode
 
 We can run the code in debug mode, this allows to test the code with low resource (small model and small dataset)
