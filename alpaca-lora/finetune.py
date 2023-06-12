@@ -1,8 +1,8 @@
+import functools
 import os
 import sys
-from typing import List, Optional, Tuple
+from typing import Dict, List, Optional, Tuple
 
-import fire
 import torch
 import transformers
 import wandb
@@ -10,77 +10,109 @@ from datasets import load_dataset
 from evaluate import evaluate
 from peft import (
     LoraConfig,
-    PeftModel,
     get_peft_model,
     get_peft_model_state_dict,
     prepare_model_for_kbit_training,
-    set_peft_model_state_dict,
 )
 from transformers import (
+    AutoConfig,
+    AutoModelForCausalLM,
+    AutoTokenizer,
     BitsAndBytesConfig,
-    LlamaConfig,
-    LlamaForCausalLM,
-    LlamaTokenizer,
 )
-from utils.llama_config import low_footprint_config
+from typer import Typer
+from utils.model_config import low_footprint_general
 from utils.prompter import Prompter
+
+is_master_process = int(os.environ.get("LOCAL_RANK", 0)) == 0
 
 
 def load_model_tokenizer(
-    base_model: str = "yahma/llama-7b-hf",
-    lora_weights: str = "tloen/alpaca-lora-7b",
-    load_8bit: bool = False,
+    base_model: str,
+    device_map: dict,
+    lora_config: dict,
+    device: str,
     debug: bool = False,
-    device: str = 'cuda',
+    load_in_4bit: object = False,
 ) -> Tuple[torch.nn.Module, transformers.PreTrainedTokenizer]:
-    assert (
-        base_model
-    ), "Please specify a --base_model or model, e.g. --base_model='huggyllama/llama-7b'"
+    load_in_8bit = True if not load_in_4bit else False
+    # No quantization available on cpu
+    if device == 'cpu' and load_in_4bit:
+        raise ValueError("Quantization (4bit and 8bit) does not work on cpu")
 
+    # Load small memory config for llama in debugging model
     if debug:
-        base_model = "yahma/llama-7b-hf"
-
-    tokenizer = LlamaTokenizer.from_pretrained(base_model)
-    # Default configurations
-    llama_args = {
-        "torch_dtype": torch.float16 if device == "cuda" else torch.float32,
-        "device_map": {"": device},
-    }
-    peft_args = {
-        "model_id": lora_weights,
-        "torch_dtype": torch.float16 if device == "cuda" else torch.float32,
-        "device_map": {"": device},
-    }
-
-    # Conditional configurations
-    if device == "cuda":
-        llama_args.update({"load_in_8bit": load_8bit, "device_map": "auto"})
-    elif device == "mps":
-        pass  # No changes needed
+        low_footprint_model_config = low_footprint_general
+        model_config = AutoConfig.from_pretrained(
+            base_model, trust_remote_code=True, **low_footprint_model_config
+        )
+        debug_model = AutoModelForCausalLM.from_config(
+            model_config,
+            trust_remote_code=True,
+        )
+        debug_model.save_pretrained('./trash/empty_model')
     else:
-        llama_args["low_cpu_mem_usage"] = True
+        model_config = AutoConfig.from_pretrained(base_model, trust_remote_code=True)
 
-    # Instantiate models
-    if debug:
-        # Debugging configuration for the Llama model, reduces parameters
-        # If a gpu is available the model will run on the gpu, otherwise cpu
-        # device = 'cuda' if torch.cuda.is_available() else 'cpu'
-        llama_config = low_footprint_config
-        model = LlamaForCausalLM(llama_config).to(device)
-    else:
-        model = LlamaForCausalLM.from_pretrained(base_model, **llama_args)
+    quant_config = BitsAndBytesConfig(
+        load_in_4bit=load_in_4bit,
+        load_in_8bit=load_in_8bit,
+        bnb_4bit_use_double_quant=True,
+        bnb_4bit_quant_type="nf4",
+        bnb_4bit_compute_dtype=torch.float16,
+    )
+    quant_config = quant_config if device == "cuda" else None
+    model = base_model if not debug else './trash/empty_model'
 
-    model = PeftModel.from_pretrained(model, **peft_args)
+    # Instantiate Llama model either from base model or from empty model
+    model = AutoModelForCausalLM.from_pretrained(
+        pretrained_model_name_or_path=model,
+        torch_dtype=torch.float16,
+        device_map=device_map,
+        config=model_config,
+        quantization_config=quant_config,
+        trust_remote_code=True,
+    )
 
-    model.config.pad_token_id = tokenizer.pad_token_id = 0  # unk
+    # Move model to cpu in debugging mode
+    if debug and device == "cpu":
+        model = model.to(device)
 
-    # floatt16 only available on gpu, do not half model for cpu
-    if not load_8bit and device == "cuda":
-        model.half()  # seems to fix bugs for some users.
+    # Prepare model for training
+    model = prepare_model_for_kbit_training(model)
+    lora_config = LoraConfig(**lora_config)
+    model = get_peft_model(model, lora_config)
+
+    # Tokenizer
+    tokenizer = AutoTokenizer.from_pretrained(base_model, use_fast=False)
+    tokenizer.pad_token_id = 0  # unk. we want this to be different from the eos token
+    tokenizer.padding_side = "left"  # Allow batched inference
 
     return model, tokenizer
 
 
+config_to_log: Dict = {}
+
+
+def log_args():
+    def decorator(func):
+        @functools.wraps(func)
+        def wrapper(*args, **kwargs):
+            if is_master_process:
+                global config_to_log
+                config_to_log = kwargs
+            return func(*args, **kwargs)
+
+        return wrapper
+
+    return decorator
+
+
+app = Typer()
+
+
+@app.command()
+@log_args()
 def train(
     # model/data params
     base_model: str = "yahma/llama-7b-hf",
@@ -98,10 +130,10 @@ def train(
     lora_alpha: int = 16,
     lora_dropout: float = 0.05,
     lora_target_modules: List[str] = [
-        "q_proj",
-        "v_proj",
+        'q_proj',
+        'v_proj',
     ],
-    load_in_4bit=False,
+    load_in_4bit: bool = False,
     # llm hyperparams
     train_on_inputs: bool = True,  # if False, masks out inputs in loss
     add_eos_token: bool = False,
@@ -114,10 +146,8 @@ def train(
     wandb_log_model: bool = True,  # options: false | true
     resume_from_checkpoint: str = None,  # either training checkpoint or final adapter
     prompt_template_name: str = "alpaca",  # The prompt template to use, will default to alpaca.
-    debug: bool = False,
+    debug: bool = False,  # Debug mode to load a small model for quick debugging
     n_samples: Optional[int] = None,
-    # debug mode this put all other parameters to a really low value so that we can quickly figure out if the code is
-    # running proprely or not
     eval_file: str = "",  # path to file you want to evaluate on
     eval_limit: int = 0,  # limit the number of instructions to evaluate on
 ):
@@ -127,38 +157,6 @@ def train(
         num_epochs = 1
         eval_file = 'resources/eval_sample.jsonl'
         eval_limit = 1
-
-    is_master_process = int(os.environ.get("LOCAL_RANK", 0)) == 0
-
-    if is_master_process:
-        params_dict = {
-            "base_model": base_model,
-            "data_path": data_path,
-            "debug:": debug,
-            "n_samples": n_samples,
-            "output_dir": output_dir,
-            "batch_size": batch_size,
-            "micro_batch_size": micro_batch_size,
-            "num_epochs": num_epochs,
-            "learning_rate": learning_rate,
-            "cutoff_len": cutoff_len,
-            "val_set_size": val_set_size,
-            "lora_r": lora_r,
-            "lora_alpha": lora_alpha,
-            "lora_dropout": lora_dropout,
-            "lora_target_modules": lora_target_modules,
-            "train_on_inputs": train_on_inputs,
-            "add_eos_token": add_eos_token,
-            "group_by_length": group_by_length,
-            "wandb_project": wandb_project,
-            "wandb_run_name": wandb_run_name,
-            "wandb_watch": wandb_watch,
-            "wandb_log_model": wandb_log_model,
-            "resume_from_checkpoint": resume_from_checkpoint or False,
-            "prompt template": prompt_template_name,
-        }
-
-        print("Training Alpaca-LoRA model with params:", params_dict)
 
     gradient_accumulation_steps = batch_size // micro_batch_size
 
@@ -176,60 +174,41 @@ def train(
         len(wandb_project) > 0
         or ("WANDB_PROJECT" in os.environ and len(os.environ["WANDB_PROJECT"]) > 0)
     )
-
     # Only overwrite environ if wandb param passed
     if use_wandb:
         os.environ["WANDB_PROJECT"] = wandb_project
         if is_master_process:
-            run = wandb.init(wandb_project)
+            init_conf = dict(config=config_to_log)
+            if len(wandb_run_name) > 0:
+                init_conf["name"] = wandb_run_name
+            run = wandb.init(wandb_project, **init_conf)
     else:
         os.environ["WANDB_MODE"] = "disabled"
     if use_wandb and len(wandb_watch) > 0:
         os.environ["WANDB_WATCH"] = wandb_watch
 
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
-    load_in_8bit = True if not load_in_4bit else False
 
     # No quantization available on cpu
-    if device == 'cpu' and (load_in_4bit):
+    if device == 'cpu' and load_in_4bit:
         raise Exception("Quantization (4bit and 8bit) does not work on cpu")
 
-    # Define quanitization
-    quant_config = BitsAndBytesConfig(
-        load_in_4bit=load_in_4bit,
-        load_in_8bit=load_in_8bit,
-        bnb_4bit_use_double_quant=True,
-        bnb_4bit_quant_type="nf4",
-        bnb_4bit_compute_dtype=torch.float16,
-    )
+    _lora_config = {
+        'r': lora_r,
+        'lora_alpha': lora_alpha,
+        'target_modules': lora_target_modules,
+        'lora_dropout': lora_dropout,
+        'bias': "none",
+        'task_type': "CAUSAL_LM",
+    }
 
-    # Load small memory config for llama in debugging model
-    llama_config = low_footprint_config if debug else LlamaConfig()
-
-    # Debugging model with smaller footprint, initialize model and save weights
-    if debug:
-        debug_model = LlamaForCausalLM(
-            llama_config,
-        )
-        debug_model.save_pretrained('./trash/empty_model')
-
-    # Instantiate Llama model either from base model or from empty model
-    model = LlamaForCausalLM.from_pretrained(
-        pretrained_model_name_or_path='./trash/empty_model' if debug else base_model,
-        torch_dtype=torch.float16,
+    model, tokenizer = load_model_tokenizer(
+        base_model=base_model,
+        device=device,
         device_map=device_map,
-        config=llama_config,
-        quantization_config=quant_config if device == "cuda" else None,
+        lora_config=_lora_config,
+        debug=debug,
     )
-
-    # Move model to cpu in debugging mode
-    if debug and device == "cpu":
-        model = model.to(device)
-
-    tokenizer = LlamaTokenizer.from_pretrained(base_model)
-
-    tokenizer.pad_token_id = 0  # unk. we want this to be different from the eos token
-    tokenizer.padding_side = "left"  # Allow batched inference
 
     def tokenize(prompt, add_eos_token=True):
         # there's probably a way to do this with the tokenizer settings
@@ -277,44 +256,10 @@ def train(
             ]  # could be sped up, probably
         return tokenized_full_prompt
 
-    model = prepare_model_for_kbit_training(model)
-
-    config = LoraConfig(
-        r=lora_r,
-        lora_alpha=lora_alpha,
-        target_modules=lora_target_modules,
-        lora_dropout=lora_dropout,
-        bias="none",
-        task_type="CAUSAL_LM",
-    )
-    model = get_peft_model(model, config)
-
     if data_path.endswith(".json") or data_path.endswith(".jsonl"):
         data = load_dataset("json", data_files=data_path)
     else:
         data = load_dataset(data_path)
-
-    if resume_from_checkpoint:
-        # Check the available weights and load them
-        checkpoint_name = os.path.join(
-            resume_from_checkpoint, "pytorch_model.bin"
-        )  # Full checkpoint
-        if use_wandb and is_master_process:
-            run = wandb.init(wandb_project, resume="allow")
-        if not os.path.exists(checkpoint_name):
-            checkpoint_name = os.path.join(
-                resume_from_checkpoint, "adapter_model.bin"
-            )  # only LoRA model - LoRA config above has to fit
-            resume_from_checkpoint = False  # So the trainer won't try loading its state
-        # The two files above have a different name depending on how they were saved, but are actually the same.
-        if os.path.exists(checkpoint_name):
-            print(f"Restarting from {checkpoint_name}")
-            adapters_weights = torch.load(checkpoint_name)
-            set_peft_model_state_dict(model, adapters_weights)
-        else:
-            print(f"Checkpoint {checkpoint_name} not found")
-
-    model.print_trainable_parameters()  # Be more transparent about the % of trainable params.
 
     if debug:
         train_data = data["train"].select(range(10)).map(generate_and_tokenize_prompt)
@@ -331,6 +276,8 @@ def train(
 
     if n_samples:
         train_data = train_data.select(range(n_samples))
+
+    model.print_trainable_parameters()  # Be more transparent about the % of trainable params.
 
     if not ddp and torch.cuda.device_count() > 1:
         # keeps Trainer from trying its own DataParallelism when more than 1 gpu is available
@@ -359,7 +306,7 @@ def train(
             load_best_model_at_end=False,
             ddp_find_unused_parameters=False if ddp else None,
             group_by_length=group_by_length,
-            report_to="wandb" if use_wandb else 'none',
+            report_to="wandb" if use_wandb else "none",
             run_name=wandb_run_name if use_wandb else None,
         ),
         data_collator=transformers.DataCollatorForSeq2Seq(
@@ -385,7 +332,6 @@ def train(
         if wandb_log_model and use_wandb:
             artifact = wandb.Artifact(name='lora_weight', type='model')
             artifact.add_dir(lora_dir)
-
             run.log_artifact(artifact)
 
         if eval_file:
@@ -408,4 +354,4 @@ def train(
 
 
 if __name__ == "__main__":
-    fire.Fire(train)
+    app()

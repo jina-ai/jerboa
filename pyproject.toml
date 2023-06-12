@@ -26,13 +26,14 @@ appdirs = "^1.4.4"
 loralib = "^0.1.1"
 bitsandbytes = "^0.39.0"
 datasets = "^2.12.0"
-fire = "^0.5.0"
 peft = { git = "https://github.com/huggingface/peft.git" }
 transformers = { git = "https://github.com/huggingface/transformers.git" }
 sentencepiece = "^0.1.99"
 accelerate = { git = "https://github.com/huggingface/accelerate.git" }
 wandb = "^0.15.3"
 scipy = "^1.9.0"
+einops = "^0.6.1"
+typer = "^0.9.0"
 
 [tool.poetry.extras]
 torch = ["torch"]
