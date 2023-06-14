@@ -13,9 +13,18 @@
   --wandb_watch gradients \
   --num_epochs 3"
 '
-echo starting run
-screen -dm eval "$1"
-echo training done
+
+if [ -z "$STY" ]
+then
+	echo "Please work in a screen"
+	exit 1
+else
+	echo "Working from screen,"
+fi
+echo Starting run
+{ eval "$1"; echo done; runpodctl stop pod $RUNPOD_POD_ID; } &
+screen -X detach
+echo Detached screen
 
 #Stop the runpod instance
 # runpodctl stop pod $RUNPOD_POD_ID
