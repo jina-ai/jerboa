@@ -1,15 +1,18 @@
+import os
+
 import torch
 from evaluate import evaluate
 from finetune import load_model_tokenizer, train
 
 
-def test_debug_mode():
+def test_debug_mode(tmp_path):
     train(
         base_model='yahma/llama-7b-hf',
-        output_dir='trash',
+        output_dir=str(tmp_path),
         debug=True,
         use_wandb=False,
     )
+    assert os.path.getsize(tmp_path / 'lora_adapter/adapter_model.bin') > 443
 
 
 lora_r: int = 8
