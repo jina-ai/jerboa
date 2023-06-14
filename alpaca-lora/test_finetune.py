@@ -5,23 +5,23 @@ from evaluate import evaluate
 from finetune import load_model_tokenizer, train
 
 
-def test_debug_mode():
+def test_debug_mode(tmp_path):
     train(
         base_model='yahma/llama-7b-hf',
-        output_dir='trash',
+        output_dir=tmp_path,
         debug=True,
         use_wandb=False,
     )
 
 
-def test_save_model():
+def test_save_model(tmp_path):
     train(
         base_model='yahma/llama-7b-hf',
-        output_dir='trash',
+        output_dir=tmp_path,
         debug=True,
         use_wandb=False,
     )
-    assert os.path.getsize('./trash/empty_model') > 443
+    assert os.path.getsize(tmp_path / 'empty_model') > 443
 
 
 lora_r: int = 8
