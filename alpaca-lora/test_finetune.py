@@ -8,20 +8,11 @@ from finetune import load_model_tokenizer, train
 def test_debug_mode(tmp_path):
     train(
         base_model='yahma/llama-7b-hf',
-        output_dir=tmp_path,
+        output_dir=str(tmp_path),
         debug=True,
         use_wandb=False,
     )
-
-
-def test_save_model(tmp_path):
-    train(
-        base_model='yahma/llama-7b-hf',
-        output_dir=tmp_path,
-        debug=True,
-        use_wandb=False,
-    )
-    assert os.path.getsize(tmp_path / 'empty_model') > 443
+    assert os.path.getsize(tmp_path / 'lora_adapter/adapter_model.bin') > 443
 
 
 lora_r: int = 8
