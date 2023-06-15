@@ -315,12 +315,6 @@ def train(
 
     if is_master_process:
         lora_dir = f"{output_dir}/lora_adapter"
-        model.save_pretrained(lora_dir)
-
-        if wandb_log_model and use_wandb:
-            artifact = wandb.Artifact(name='lora_weight', type='model')
-            artifact.add_dir(lora_dir)
-            run.log_artifact(artifact)
 
         if eval_file:
             results = evaluate(
@@ -337,6 +331,13 @@ def train(
                 run.log({"Evaluation": eval_table})
             else:
                 print(results)
+
+        model.save_pretrained(lora_dir)
+
+        if wandb_log_model and use_wandb:
+            artifact = wandb.Artifact(name='lora_weight', type='model')
+            artifact.add_dir(lora_dir)
+            run.log_artifact(artifact)
 
     print("\n If there's a warning about missing keys above, please disregard :)")
 
