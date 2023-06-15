@@ -2,7 +2,7 @@ import json
 
 from transformers import AutoModelForCausalLM, AutoTokenizer
 
-checkpoint = "bigcode/starcoder"
+checkpoint = "HuggingFaceH4/starchat-alpha"
 device = "cuda"  # for GPU usage or "cpu" for CPU usage
 
 tokenizer = AutoTokenizer.from_pretrained(checkpoint)
