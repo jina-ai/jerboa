@@ -314,7 +314,6 @@ def train(
     trainer.train(resume_from_checkpoint=resume_from_checkpoint)
 
     if is_master_process:
-
         lora_dir = f"{output_dir}/lora_adapter"
         if wandb_log_model and use_wandb:
             artifact = wandb.Artifact(name='lora_weight', type='model')
