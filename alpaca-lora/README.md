@@ -20,6 +20,12 @@ You can now continue with the training and inference explained below.
 bash <(curl -Ls https://raw.githubusercontent.com/sebastian-weisshaar/config_jerboa/main/config.sh)
 ```
 
+To run a training run and automatically shutdown the runpod afterwards run the following command in a screen on runpod:
+ATTENTION: The runpod shuts down immediately if you run the command before logging in to WandB
+```bash
+./training_run.sh "python <your training run setup>"
+```
+
 ### debug mode
 
 We can run the code in debug mode, this allows to test the code with low resource (small model and small dataset)
