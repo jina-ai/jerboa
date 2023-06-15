@@ -83,7 +83,8 @@ this should take a couple of second to run on a singe 3090. Just doing one epoch
 
 ### Target modules
 You need to specify the target `lora_target_modules` as for each different model that is used. For Falcon 7b `lora_target_modules=["query_key_value"]`
-For Llama 7b `lora_target_modules=["q_proj", "v_proj"]`. 
+For Llama 7b `lora_target_modules=["q_proj", "v_proj"]`. However, in the command line the target modules need to be passed as individual arguments. 
+See the example below for an illustration. 
 
 ## Evaluation
 To run evaluation you first need an evaluation file or dataset.
