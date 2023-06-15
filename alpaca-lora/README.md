@@ -20,6 +20,12 @@ You can now continue with the training and inference explained below.
 bash <(curl -Ls https://raw.githubusercontent.com/sebastian-weisshaar/config_jerboa/main/config.sh)
 ```
 
+To run a training run and automatically shutdown the runpod afterwards run the following command in a screen on runpod:
+ATTENTION: The runpod shuts down immediately if you run the command before logging in to WandB
+```bash
+./training_run.sh "python <your training run setup>"
+```
+
 ### debug mode
 
 We can run the code in debug mode, this allows to test the code with low resource (small model and small dataset)
@@ -77,7 +83,8 @@ this should take a couple of second to run on a singe 3090. Just doing one epoch
 
 ### Target modules
 You need to specify the target `lora_target_modules` as for each different model that is used. For Falcon 7b `lora_target_modules=["query_key_value"]`
-For Llama 7b `lora_target_modules=["q_proj", "v_proj"]`. 
+For Llama 7b `lora_target_modules=["q_proj", "v_proj"]`. However, in the command line the target modules need to be passed as individual arguments. 
+See the example below for an illustration. 
 
 ## Evaluation
 To run evaluation you first need an evaluation file or dataset.
@@ -99,7 +106,8 @@ To run evaluation after finetuning you can use the following command:
 CUDA_VISIBLE_DEVICES=2 \
 python finetune.py \
   --base-model 'yahma/llama-7b-hf' \
-  --lora-target-modules "[q_proj, v_proj]" \
+  --lora-target-modules q_proj \
+  --lora-target-modules v_proj \
   --data-path <Your-data-path> \
   --output-dir './lora-alpaca' \
   --wandb-project 'jerboa' \
