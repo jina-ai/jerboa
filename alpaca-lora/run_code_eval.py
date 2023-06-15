@@ -8,7 +8,6 @@ app = Typer(pretty_exceptions_enable=False)
 
 @app.command()
 def run_eval(checkpoint: str, device: str = "cuda", eval_file: str = "code_eval.jsonl"):
-
     tokenizer = AutoTokenizer.from_pretrained(checkpoint)
     model = AutoModelForCausalLM.from_pretrained(checkpoint).to(device)
 
