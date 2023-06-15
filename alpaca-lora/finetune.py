@@ -219,7 +219,7 @@ def train(
             prompt,
             truncation=True,
             max_length=cutoff_len,
-            padding=False,
+            padding=True,  # Change!!!!!!!!!!
             return_tensors=None,
         )
         if (
