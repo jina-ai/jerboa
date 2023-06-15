@@ -3,15 +3,15 @@
 # Example:
  : '
   ./training_run.sh "python finetune.py  \
-  --base_model yahma/llama-7b-hf \
-  --output_dir ./lora-alpaca \
-  --batch_size 128 \
-  --micro_batch_size 4 \
-  --eval_limit 30 \
-  --eval_file eval.json \
-  --wandb_log_model true  \
-  --wandb_watch gradients \
-  --num_epochs 3"
+  --base-model yahma/llama-7b-hf \
+  --output-dir ./lora-alpaca \
+  --batch-size 128 \
+  --micro-batch_size 4 \
+  --eval-limit 30 \
+  --eval-file eval.json \
+  --wandb-log_model true  \
+  --wandb-watch gradients \
+  --num-epochs 3"
 '
 
 if [ -z "$STY" ]
