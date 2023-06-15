@@ -105,7 +105,8 @@ To run evaluation after finetuning you can use the following command:
 CUDA_VISIBLE_DEVICES=2 \
 python finetune.py \
   --base-model 'yahma/llama-7b-hf' \
-  --lora-target-modules "[q_proj, v_proj]" \
+  --lora-target-modules q_proj \
+  --lora-target-modules v_proj \
   --data-path <Your-data-path> \
   --output-dir './lora-alpaca' \
   --wandb-project 'jerboa' \
