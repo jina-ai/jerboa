@@ -25,6 +25,3 @@ echo Starting run
 { eval "$1"; echo done; runpodctl stop pod $RUNPOD_POD_ID; } &
 screen -X detach
 echo Detached screen
-
-#Stop the runpod instance
-# runpodctl stop pod $RUNPOD_POD_ID
