@@ -18,7 +18,7 @@ def run_eval(checkpoint: str, device: str = "cuda", eval_file: str = "code_eval.
             eval_data.append(json.loads(line))
 
     results = []
-    for i, eval_instance in enumerate(eval_data):
+    for eval_instance in eval_data:
         x = tokenizer.encode(
             "### Instruction: \n"
             + eval_instance['instruction']
@@ -27,8 +27,6 @@ def run_eval(checkpoint: str, device: str = "cuda", eval_file: str = "code_eval.
             + "### Response: \n",
             return_tensors='pt',
         ).to(device)
-        print(x.is_cuda)
-        print(next(model.parameters()).is_cuda)
         y = model.generate(
             x,
             max_length=256,
