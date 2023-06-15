@@ -314,9 +314,8 @@ def train(
     trainer.train(resume_from_checkpoint=resume_from_checkpoint)
 
     if is_master_process:
-        lora_dir = f"{output_dir}/lora_adapter"
-        model.save_pretrained(lora_dir)
 
+        lora_dir = f"{output_dir}/lora_adapter"
         if wandb_log_model and use_wandb:
             artifact = wandb.Artifact(name='lora_weight', type='model')
             artifact.add_dir(lora_dir)
@@ -338,6 +337,7 @@ def train(
             else:
                 print(results)
 
+        model.save_pretrained(lora_dir)
     print("\n If there's a warning about missing keys above, please disregard :)")
 
 
