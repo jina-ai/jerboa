@@ -2,13 +2,13 @@
 # use this script by passing the training argument as string
 # Example:
  : '
-  ./executor "python finetune.py  \
+  ./training_run.sh "python finetune.py  \
   --base_model yahma/llama-7b-hf \
   --output_dir ./lora-alpaca \
   --batch_size 128 \
   --micro_batch_size 4 \
-  --eval_limit 30 -\
-  -eval_file eval.json \
+  --eval_limit 30 \
+  --eval_file eval.json \
   --wandb_log_model true  \
   --wandb_watch gradients \
   --num_epochs 3"
