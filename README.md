@@ -26,7 +26,7 @@ poetry install
 fix bitsandbytes
 
 ```bash
-pip install https://github.com/samsja/bitsandbytes/blob/feat-save-col-wheel/bitsandbytes-0.39.0-py3-none-any.whl\?raw\=true
+pip install https://github.com/samsja/bitsandbytes/blob/feat-save-col-wheel/bitsandbytes-0.39.1-py3-none-any.whl\?raw\=true
 ```
 
 this is needed to fixe the OOM problem
