@@ -9,13 +9,7 @@ import transformers
 import wandb
 from data_processing import load_train_val_data
 from evaluate import evaluate
-from peft import (
-    LoraConfig,
-    PeftModel,
-    get_peft_model,
-    get_peft_model_state_dict,
-    prepare_model_for_kbit_training,
-)
+from peft import LoraConfig, PeftModel, get_peft_model, prepare_model_for_kbit_training
 from transformers import (
     AutoConfig,
     AutoModelForCausalLM,
@@ -314,11 +308,6 @@ def train(
     )
     model.config.use_cache = False
 
-    old_state_dict = model.state_dict
-    model.state_dict = (
-        lambda self, *_, **__: get_peft_model_state_dict(self, old_state_dict())
-    ).__get__(model, type(model))
-
     if torch.__version__ >= "2" and sys.platform != "win32":
         model = torch.compile(model)
 
@@ -326,12 +315,6 @@ def train(
 
     if is_master_process:
         lora_dir = f"{output_dir}/lora_adapter"
-        model.save_pretrained(lora_dir)
-
-        if wandb_log_model and use_wandb:
-            artifact = wandb.Artifact(name='lora_weight', type='model')
-            artifact.add_dir(lora_dir)
-            run.log_artifact(artifact)
 
         if eval_file:
             results = evaluate(
@@ -348,6 +331,13 @@ def train(
                 run.log({"Evaluation": eval_table})
             else:
                 print(results)
+
+        model.save_pretrained(lora_dir)
+
+        if wandb_log_model and use_wandb:
+            artifact = wandb.Artifact(name='lora_weight', type='model')
+            artifact.add_dir(lora_dir)
+            run.log_artifact(artifact)
 
     print("\n If there's a warning about missing keys above, please disregard :)")
 
