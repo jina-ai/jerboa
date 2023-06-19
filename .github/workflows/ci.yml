@@ -47,7 +47,7 @@ jobs:
 # run all tests
   setup-test:
     needs: [lint-ruff, check-black,]
-    runs-on: ubuntu-20.04
+    runs-on: [self-hosted, x64, gpu, linux]
     strategy:
       fail-fast: false
       matrix:
@@ -63,7 +63,7 @@ jobs:
           python -m pip install --upgrade pip
           python -m pip install -U poetry
           poetry install
-          poetry run pip install torch --extra-index-url https://download.pytorch.org/whl/cpu
+          poetry run pip install torch
 
       - name: Test
         id: test
