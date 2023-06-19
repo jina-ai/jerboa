@@ -361,14 +361,17 @@ lxml = ["lxml"]
 
 [[package]]
 name = "bitsandbytes"
-version = "0.39.0"
+version = "0.39.1"
 description = "k-bit optimizers and matrix multiplication routines."
 optional = false
 python-versions = "*"
 files = [
-    {file = "bitsandbytes-0.39.0-py3-none-any.whl", hash = "sha256:69e79cfce501cad5e34e9d785f5caf1768ead64f3e9f93b6bac1753e04dfa39a"},
-    {file = "bitsandbytes-0.39.0.tar.gz", hash = "sha256:b453dacf854e3624fe72b1306b1a6916de4a5edfd88fa01bf98ba73b2e3030d4"},
+    {file = "bitsandbytes-0.39.1-py3-none-any.whl", hash = "sha256:1803f97ea0f5cc60f24102e7d6a5d3b45173c164c52b25aa57db6646af14e417"},
 ]
+
+[package.source]
+type = "url"
+url = "https://github.com/samsja/bitsandbytes/blob/feat-save-col-wheel/bitsandbytes-0.39.1-py3-none-any.whl?raw=true"
 
 [[package]]
 name = "black"
@@ -3933,4 +3936,4 @@ torch = ["torch"]
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.8,<4.0"
-content-hash = "c69de7a9e5b6cb150ae8ec925e5f4ed6ea400f366a4cebdfdb95826f4edac483"
+content-hash = "1f24f89ff7f7d6dd77c0a957727928f05c4b29f8c4393508b349ce5934848030"

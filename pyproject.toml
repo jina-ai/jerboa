@@ -24,7 +24,7 @@ python = ">=3.8,<4.0"
 torch = { version = ">=2.0.1", optional = true }
 appdirs = "^1.4.4"
 loralib = "^0.1.1"
-bitsandbytes = "^0.39.0"
+bitsandbytes = { url = "https://github.com/samsja/bitsandbytes/blob/feat-save-col-wheel/bitsandbytes-0.39.1-py3-none-any.whl?raw=true" }
 datasets = "^2.12.0"
 peft = { git = "https://github.com/huggingface/peft.git" }
 transformers = ">= 4.30.1"
