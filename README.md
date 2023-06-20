@@ -17,7 +17,7 @@ first install poetry
 pip install -U poetry
 ```
 
-If you encounter a keyring error on the Berlin GPU run: 
+If you encounter a keyring error on GPU run: 
 ```bash
 poetry run python -m pip install keyring
 poetry run python -m keyring --disable
@@ -30,7 +30,7 @@ poetry install
 
 this is needed to fixe the OOM problem
 
-For Berlin GPU install torch:
+For GPU install torch finish the torch installation (cuda stuff):
 ```bash
 pip install torch
 ```
@@ -96,7 +96,7 @@ CUDA_VISIBLE_DEVICES=0 python finetune.py --debug
 this still use wandb. If you want to disable wandb you can do
 
 ```bash
-CUDA_VISIBLE_DEVICES=0 python finetune.py --debug --use-wandb=False
+CUDA_VISIBLE_DEVICES=0 python finetune.py --debug --no-use-wandb
 ```
 
 ## Distributed training
