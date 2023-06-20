@@ -76,7 +76,7 @@ Connect to the VM via SSH, then run the following command to install the necessa
 You can now continue with the training and inference explained below. 
 
 ```bash
-bash ./config.sh
+bash ./script/config.sh
 ```
 
 To run a training run and automatically shutdown the runpod afterwards run the following command in a screen on runpod:
