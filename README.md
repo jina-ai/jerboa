@@ -28,12 +28,6 @@ You don't need to setup a virtual env, poetry will take care of it.
 poetry install
 ```
 
-fix bitsandbytes
-
-```bash
-pip install https://github.com/samsja/bitsandbytes/blob/feat-save-col-wheel/bitsandbytes-0.39.1-py3-none-any.whl\?raw\=true
-```
-
 this is needed to fixe the OOM problem
 
 For Berlin GPU install torch:
