@@ -1,0 +1,5 @@
+{
+    "description": "Template used by LIMA.",
+    "prompt": "Below is a question or a conversation. Write a response that appropriately completes the question or the conversation.\n\n### Conversation:\n{conversation}### Response:\n",
+    "response_split": "### Response:"
+}

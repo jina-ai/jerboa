@@ -8,9 +8,10 @@ from typing import Union
 
 
 class Prompter(object):
-    __slots__ = ("template", "_verbose")
+    __slots__ = ("template_name", "template", "_verbose")
 
     def __init__(self, template_name: str = "", verbose: bool = False):
+        self.template_name = template_name
         self._verbose = verbose
         if not template_name:
             # Enforce the default here, so the constructor can be called with '' and will not break.
@@ -33,12 +34,15 @@ class Prompter(object):
     ) -> str:
         # returns the full prompt from instruction and optional input
         # if a label (=response, =output) is provided, it's also appended.
-        if input:
-            res = self.template["prompt_input"].format(
-                instruction=instruction, input=input
-            )
+        if self.template_name == "lima":
+            res = self.template["prompt"].format(conversation=instruction)
         else:
-            res = self.template["prompt_no_input"].format(instruction=instruction)
+            if input:
+                res = self.template["prompt_input"].format(
+                    instruction=instruction, input=input
+                )
+            else:
+                res = self.template["prompt_no_input"].format(instruction=instruction)
         if label:
             res = f"{res}{label}"
         if self._verbose:
