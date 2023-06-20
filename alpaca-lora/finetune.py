@@ -339,8 +339,6 @@ def train(
             artifact.add_dir(lora_dir)
             run.log_artifact(artifact)
 
-    print("\n If there's a warning about missing keys above, please disregard :)")
-
 
 if __name__ == "__main__":
     app()
