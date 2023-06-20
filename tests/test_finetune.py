@@ -1,8 +1,9 @@
 import os
 
 import torch
-from evaluate import evaluate
-from finetune import load_model_tokenizer, train
+
+from jerboa.evaluate import evaluate
+from jerboa.finetune import load_model_tokenizer, train
 
 
 def test_debug_mode(tmp_path):
@@ -43,7 +44,7 @@ def test_eval():
     results = evaluate(
         model=model,
         tokenizer=tokenizer,
-        eval_file='resources/eval_sample.jsonl',
+        eval_file='jerboa/resources/eval_sample.jsonl',
         eval_limit=2,
     )
     assert len(results) == 2

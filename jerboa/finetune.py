@@ -7,8 +7,6 @@ from typing import Dict, List, Optional, Tuple
 import torch
 import transformers
 import wandb
-from data_processing import load_train_val_data
-from evaluate import evaluate
 from peft import LoraConfig, PeftModel, get_peft_model, prepare_model_for_kbit_training
 from transformers import (
     AutoConfig,
@@ -17,8 +15,11 @@ from transformers import (
     BitsAndBytesConfig,
 )
 from typer import Typer
-from utils.model_config import low_footprint_general
-from utils.prompter import Prompter
+
+from jerboa.data_processing import load_train_val_data
+from jerboa.evaluate import evaluate
+from jerboa.utils.model_config import low_footprint_general
+from jerboa.utils.prompter import Prompter
 
 is_master_process = int(os.environ.get("LOCAL_RANK", 0)) == 0
 

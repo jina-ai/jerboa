@@ -2,9 +2,12 @@
 A dedicated helper to manage templates and prompt building.
 """
 
+import inspect
 import json
 import os.path as osp
 from typing import Union
+
+import jerboa
 
 
 class Prompter(object):
@@ -15,7 +18,10 @@ class Prompter(object):
         if not template_name:
             # Enforce the default here, so the constructor can be called with '' and will not break.
             template_name = "alpaca"
+
+        jerboa_path = osp.dirname(inspect.getfile(jerboa))
         file_name = osp.join("templates", f"{template_name}.json")
+        file_name = osp.join(jerboa_path, file_name)
         if not osp.exists(file_name):
             raise ValueError(f"Can't read {file_name}")
         with open(file_name) as fp:

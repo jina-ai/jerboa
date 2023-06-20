@@ -3,7 +3,8 @@ from typing import Any, Dict, List
 
 import torch
 from transformers import GenerationConfig, PreTrainedTokenizer
-from utils.prompter import Prompter
+
+from jerboa.utils.prompter import Prompter
 
 if torch.cuda.is_available():
     device = "cuda"
