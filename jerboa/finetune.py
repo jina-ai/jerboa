@@ -1,5 +1,7 @@
 import functools
+import inspect
 import os
+import os.path as osp
 import sys
 import uuid
 from typing import Dict, List, Optional, Tuple
@@ -16,6 +18,7 @@ from transformers import (
 )
 from typer import Typer
 
+import jerboa
 from jerboa.data_processing import load_train_val_data
 from jerboa.evaluate import evaluate
 from jerboa.utils.model_config import low_footprint_general
@@ -154,7 +157,9 @@ def train(
         batch_size = 2
         micro_batch_size = 1
         num_epochs = 1
-        eval_file = 'resources/eval_sample.jsonl'
+
+        jerboa_path = osp.dirname(inspect.getfile(jerboa))
+        eval_file = osp.join(jerboa_path, 'resources/eval_sample.jsonl')
         eval_limit = 1
 
     gradient_accumulation_steps = batch_size // micro_batch_size
