@@ -124,7 +124,7 @@ def train(
     micro_batch_size: int = 4,
     num_epochs: int = 3,
     learning_rate: float = 3e-4,
-    cutoff_len: int = 256,
+    training_max_tokens: int = 2048,
     val_set_size: int = 2000,
     # lora hyperparams
     lora_r: int = 8,
@@ -152,6 +152,7 @@ def train(
     eval_file: str = "",  # path to file you want to evaluate on
     eval_limit: int = 0,  # limit the number of instructions to evaluate on
     dataset_preprocessor: str = 'default',  # name of the dataset_preprocessor
+    max_tokens: int = 2048,
 ):
     if debug:
         batch_size = 2
@@ -224,13 +225,13 @@ def train(
         result = tokenizer(
             prompt,
             truncation=True,
-            max_length=cutoff_len,
+            max_length=training_max_tokens,
             padding=False,
             return_tensors=None,
         )
         if (
             result["input_ids"][-1] != tokenizer.eos_token_id
-            and len(result["input_ids"]) < cutoff_len
+            and len(result["input_ids"]) < training_max_tokens
             and add_eos_token
         ):
             result["input_ids"].append(tokenizer.eos_token_id)
@@ -328,6 +329,7 @@ def train(
                 tokenizer=tokenizer,
                 eval_file=eval_file,
                 eval_limit=eval_limit,
+                max_tokens=max_tokens,
             )
 
             if use_wandb:

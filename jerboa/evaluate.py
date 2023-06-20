@@ -18,6 +18,7 @@ def evaluate(
     prompt_template: str = "",
     eval_file: str = "",
     eval_limit: int = 0,
+    max_tokens: int = 128,
 ) -> List[Dict[str, Any]]:
     prompter = Prompter(prompt_template)
 
@@ -30,7 +31,7 @@ def evaluate(
         top_p=0.75,
         top_k=40,
         num_beams=4,
-        max_new_tokens=128,
+        max_tokens=128,
         **kwargs,
     ):
         prompt = prompter.generate_prompt(instruction, input)
@@ -50,7 +51,7 @@ def evaluate(
                 generation_config=generation_config,
                 return_dict_in_generate=True,
                 output_scores=True,
-                max_new_tokens=max_new_tokens,
+                max_new_tokens=max_tokens - len(input_ids),
             )
         s = generation_output.sequences[0]
         output = tokenizer.decode(s)
@@ -65,7 +66,9 @@ def evaluate(
     for i, eval_instance in enumerate(eval_data):
         output = list(
             evaluate(
-                eval_instance["instruction"], eval_instance["instances"][0]["input"]
+                eval_instance["instruction"],
+                eval_instance["instances"][0]["input"],
+                max_tokens=max_tokens,
             )
         )[0]
         if eval_limit != 0 and i == eval_limit:
