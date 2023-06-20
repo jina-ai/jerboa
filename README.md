@@ -1,6 +1,6 @@
 # Jerboa
 
-Jerboa is an experimental repo to finetune several open source LLM (llama, falcon, ...) on several dataset( alpaca, code-alpaca, ...).
+Jerboa is an experimental repo to finetune several open source LLM (llama, falcon, ...) on several datasets ( alpaca, code-alpaca, ...).
 
 The repo is shared publicly to allow the community to reproduce our results. Though it is still very experimental and a lot
 of breaking change will happen. This is not production ready software. Check ouf [finetuner](https://github.com/jina-ai/finetuner) for a production ready software.
@@ -93,7 +93,7 @@ ATTENTION: The runpod shuts down immediately if you run the command before loggi
 
 ### debug mode
 
-We can run the code in debug mode, this allows to test the code with low resource (small model and small dataset)
+We can run the code in debug mode, this allows to test the code with little resources (small model and small dataset).
 
 ```bash
 CUDA_VISIBLE_DEVICES=0 python finetune.py --debug
