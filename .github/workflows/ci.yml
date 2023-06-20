@@ -68,7 +68,7 @@ jobs:
       - name: Test
         id: test
         run: |
-          cd alpaca-lora
+          cd jerboa
           poetry run pytest test_finetune.py
         timeout-minutes: 30
 
