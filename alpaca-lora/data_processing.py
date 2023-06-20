@@ -120,3 +120,4 @@ PREPROCESSORS_MAP[
 PREPROCESSORS_MAP[
     ('togethercomputer/RedPajama-Data-Instruct', "data/P3_decontaminated.jsonl.zst")
 ] = redpajamas_p3_to_alpaca_format
+PREPROCESSORS_MAP[('GAIR/lima', None)] = lima_to_alpaca_format
