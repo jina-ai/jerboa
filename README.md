@@ -134,11 +134,11 @@ Just add the following flags:
 `--data-path curated_dataset_name --data-files curated_dataset_data_files --dataset-preprocessor redpajamas_ni_to_alpaca_format `
 ## Tests
 
-You can run our tests by doing
+You can run our tests by doing at the root folder level
 
 
 ```bash
-CUDA_VISIBLE_DEVICES=0 pytest test_finetune.py
+CUDA_VISIBLE_DEVICES=0 pytest tests
 ```
 
 
