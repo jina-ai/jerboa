@@ -56,6 +56,11 @@ pre-commit install
 
 # Jina AI alpca lora fork
 
+to follow the rest of the readme, you need to be in the `jerboa` folder.
+
+```bash
+cd jerboa
+```
 
 This folder is the fork of the great [alpaca lora](https://github.com/tloen/alpaca-lora) repo. 
 
@@ -64,6 +69,7 @@ the rest of this readme is the original README from the repo.
 
 
 ## Finetuning
+
 
 !!! To follow the rest be sure to have enabled your virtual env with poetry (see above)
 
