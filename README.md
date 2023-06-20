@@ -76,7 +76,7 @@ Connect to the VM via SSH, then run the following command to install the necessa
 You can now continue with the training and inference explained below. 
 
 ```bash
-bash <(curl -Ls https://raw.githubusercontent.com/sebastian-weisshaar/config_jerboa/main/config.sh)
+bash <(curl -Ls https://raw.githubusercontent.com/jina-ai/jerboa/main/script/config.sh)
 ```
 
 To run a training run and automatically shutdown the runpod afterwards run the following command in a screen on runpod:
