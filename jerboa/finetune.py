@@ -276,6 +276,11 @@ def train(
     if val_data:
         val_data = val_data.map(generate_and_tokenize_prompt)
 
+    def filter_fn(example):
+        return example["input_ids"][-1] == tokenizer.eos_token_id
+
+    train_data = train_data.filter(filter_fn)
+
     model.print_trainable_parameters()  # Be more transparent about the % of trainable params.
 
     if not ddp and torch.cuda.device_count() > 1:
