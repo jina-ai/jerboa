@@ -41,6 +41,7 @@ def evaluate(
             top_p=top_p,
             top_k=top_k,
             num_beams=num_beams,
+            eos_token_id=tokenizer.eos_token_id,
             **kwargs,
         )
 
@@ -53,7 +54,7 @@ def evaluate(
                 max_new_tokens=max_new_tokens,
             )
         s = generation_output.sequences[0]
-        output = tokenizer.decode(s)
+        output = tokenizer.decode(s, skip_special_tokens=True)
         yield prompter.get_response(output)
 
     eval_data = []
