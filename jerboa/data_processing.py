@@ -83,6 +83,15 @@ def process_element_lima_to_alpaca_format(element):
     return output_dict
 
 
+def process_element_dolly_to_alpaca_format(element):
+    output_dict = {
+        'instruction': element['instruction'],
+        'input': element['instruction'],
+        'output': element['response'],
+    }
+    return output_dict
+
+
 def redpajamas_p3_to_alpaca_format(dataset: DatasetDict) -> DatasetDict:
     with mp.Pool(8) as pool:
         output_list = list(
@@ -107,10 +116,23 @@ def lima_to_alpaca_format(dataset: DatasetDict) -> DatasetDict:
     return DatasetDict({'train': Dataset.from_list(output_list)})
 
 
+def dolly_to_alpaca_format(dataset: DatasetDict) -> DatasetDict:
+    with mp.Pool(8) as pool:
+        output_list = list(
+            pool.imap(
+                process_element_dolly_to_alpaca_format,
+                tqdm(dataset['train']),
+                chunksize=5000,
+            )
+        )
+    return DatasetDict({'train': Dataset.from_list(output_list)})
+
+
 PREPROCESSORS = {
     'redpajamas_ni_to_alpaca_format': redpajamas_ni_to_alpaca_format,
     'redpajamas_p3_to_alpaca_format': redpajamas_p3_to_alpaca_format,
     'lima_to_alpaca_format': lima_to_alpaca_format,
+    'dolly_to_alpaca_format': dolly_to_alpaca_format,
     'default': None,
 }
 PREPROCESSORS_MAP = defaultdict(lambda: lambda x: x)
@@ -120,4 +142,5 @@ PREPROCESSORS_MAP[
 PREPROCESSORS_MAP[
     ('togethercomputer/RedPajama-Data-Instruct', "data/P3_decontaminated.jsonl.zst")
 ] = redpajamas_p3_to_alpaca_format
+PREPROCESSORS_MAP[('databricks/databricks-dolly-15k', None)] = dolly_to_alpaca_format
 PREPROCESSORS_MAP[('GAIR/lima', None)] = lima_to_alpaca_format
