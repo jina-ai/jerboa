@@ -86,7 +86,7 @@ def process_element_lima_to_alpaca_format(element):
 def process_element_dolly_to_alpaca_format(element):
     output_dict = {
         'instruction': element['instruction'],
-        'input': element['instruction'],
+        'input': element['context'],
         'output': element['response'],
     }
     return output_dict
