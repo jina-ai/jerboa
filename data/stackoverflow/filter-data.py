@@ -23,7 +23,7 @@ def satisfies_answer_filters(elem):
         return False
 
     answer_text = elem.attrib['Body']
-    if len(answer_text) > 4096 or len(answer_text) < 1200:
+    if not 1200 < len(answer_text) < 4096:
         return False
 
     exclusion_words = [' I ', ' me ', 'as mentioned']
