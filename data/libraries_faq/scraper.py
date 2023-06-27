@@ -2,7 +2,6 @@ import requests
 from bs4 import BeautifulSoup
 from markdownify import markdownify as md
 import json
-import os
 
 # URLs to scrape from
 urls = [
@@ -34,7 +33,10 @@ names = [
 targets = ['h3', 'h3', 'h2', 'h2', 'h3', 'h2', 'h3', 'h3', 'h2']
 
 # Create a list of dictionaries
-pages = [{'name': names[i], 'url': urls[i], 'target': targets[i]} for i in range(len(names))]
+pages = [
+    {'name': names[i], 'url': urls[i], 'target': targets[i]} for i in range(len(names))
+]
+
 
 # Get content between tags as markdown
 def find_content_between(x):
@@ -58,17 +60,19 @@ if __name__ == "__main__":
 
         questions = []
         for i in results:
-            questions.append({'instruction': i.text, 'context': x['name'], 'output': find_content_between(i)})
+            questions.append(
+                {
+                    'instruction': i.text,
+                    'context': x['name'],
+                    'output': find_content_between(i),
+                }
+            )
 
         exclusion = ['Table of Contents', 'This Page', 'Navigation']
         questions = [i for i in questions if i['instruction'] not in exclusion]
-        
+
         # Write to output file
         with open('output.jsonl', 'a') as outfile:
             for entry in questions:
                 json.dump(entry, outfile)
                 outfile.write('\n')
-
-
-
-
