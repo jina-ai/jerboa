@@ -41,7 +41,6 @@ def evaluate(
             top_p=top_p,
             top_k=top_k,
             num_beams=num_beams,
-            eos_token_id=tokenizer.eos_token_id,
             **kwargs,
         )
 
