@@ -26,13 +26,9 @@ def satisfies_answer_filters(elem):
     if len(answer_text) > 4096 or len(answer_text) < 1200:
         return False
 
-    return (
-        ' I ' not in answer_text
-        and ' me ' not in answer_text
-        and 'as mentioned' not in answer_text
-    )
-
-
+    exclusion_words = [' I ', ' me ', 'as mentioned']
+    return not any(word in answer_text for word in exclusion_words)
+    
 for i, (event, elem) in enumerate(ET.iterparse(filepath, events=("start", "end"))):
     if elem.tag == 'row':
         if elem.attrib['PostTypeId'] == '1' and satisfies_question_filters(elem):
