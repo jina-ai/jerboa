@@ -37,6 +37,10 @@ pages = [
     {'name': names[i], 'url': urls[i], 'target': targets[i]} for i in range(len(names))
 ]
 
+# Clear the output file
+with open('./output.jsonl', 'w') as f:
+    pass
+
 
 # Get content between tags as markdown
 def find_content_between(x):
