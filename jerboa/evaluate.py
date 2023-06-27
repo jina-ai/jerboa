@@ -54,7 +54,7 @@ def evaluate(
                 max_new_tokens=max_new_tokens,
             )
         s = generation_output.sequences[0]
-        output = tokenizer.decode(s, skip_special_tokens=True)
+        output = tokenizer.decode(s)
         yield prompter.get_response(output)
 
     eval_data = []
