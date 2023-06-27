@@ -28,7 +28,8 @@ def satisfies_answer_filters(elem):
 
     exclusion_words = [' I ', ' me ', 'as mentioned']
     return not any(word in answer_text for word in exclusion_words)
-    
+
+
 for i, (event, elem) in enumerate(ET.iterparse(filepath, events=("start", "end"))):
     if elem.tag == 'row':
         if elem.attrib['PostTypeId'] == '1' and satisfies_question_filters(elem):
