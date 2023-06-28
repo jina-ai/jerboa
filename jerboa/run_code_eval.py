@@ -39,7 +39,7 @@ tokenizer = AutoTokenizer.from_pretrained(config.base_model_name_or_path, trust_
 # # 'complaint'
 
 @app.command()
-def run_eval(eval_file: str = "code_eval.jsonl"):
+def run_eval(eval_file: str = "eval.jsonl"):
     eval_data = []
     with open(eval_file, 'r') as f:
         for line in f:
