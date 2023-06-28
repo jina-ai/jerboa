@@ -60,7 +60,7 @@ def run_eval(eval_file: str = "eval.jsonl"):
                 input_ids = x['input_ids'],
                 attention_mask = x['attention_mask'],
                 # generation_config=generation_config,
-                max_length=256,
+                max_length=512,
                 do_sample=True,
                 top_p=0.95,
                 top_k=4,
@@ -69,7 +69,7 @@ def run_eval(eval_file: str = "eval.jsonl"):
                 eos_token_id=tokenizer.eos_token_id,
                 pad_token_id=tokenizer.eos_token_id,
                 repetition_penalty=2.0,
-                length_penalty=-10,
+                length_penalty=-100,
             )
         print(
             tokenizer.decode(
