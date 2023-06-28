@@ -9,10 +9,10 @@ app = Typer(pretty_exceptions_enable=False)
 device = "cuda"
 
 peft_model_id = "jinaai/falcon-7b"
-config = PeftConfig.from_pretrained(peft_model_id)
-model = AutoModelForCausalLM.from_pretrained(config.base_model_name_or_path)
+config = PeftConfig.from_pretrained(peft_model_id, trust_remote=True)
+model = AutoModelForCausalLM.from_pretrained(config.base_model_name_or_path, trust_remote_code=True)
 model = PeftModel.from_pretrained(model, peft_model_id)
-tokenizer = AutoTokenizer.from_pretrained(config.base_model_name_or_path)
+tokenizer = AutoTokenizer.from_pretrained(config.base_model_name_or_path, trust_remote_code=True)
 
 model = model.to(device)
 model.eval()
