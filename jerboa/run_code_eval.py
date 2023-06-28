@@ -27,7 +27,7 @@ model = PeftModel.from_pretrained(model, peft_model_id)
 tokenizer = AutoTokenizer.from_pretrained(config.base_model_name_or_path, trust_remote_code=True)
 
 model = model.to(device)
-model.eval()
+# model.eval()
 
 # with torch.no_grad():
 #   outputs = model.generate(input_ids=inputs["input_ids"].to("cuda"), max_new_tokens=10)
@@ -51,6 +51,7 @@ def run_eval(eval_file: str = "code_eval.jsonl"):
             + "### Response: \n",
             return_tensors='pt',
         ).to(device)
+        print(x)
         y = model.generate(
             x,
             max_length=256,
