@@ -54,14 +54,14 @@ def run_eval(eval_file: str = "code_eval.jsonl"):
         ).to(device)
 
         y = model.generate(
-            x,
-            max_length=256,
-            do_sample=True,
-            top_p=0.95,
-            top_k=4,
-            temperature=0.2,
-            num_return_sequences=1,
-            eos_token_id=tokenizer.eos_token_id,
+            x["input_ids"],
+            # max_length=256,
+            # do_sample=True,
+            # top_p=0.95,
+            # top_k=4,
+            # temperature=0.2,
+            # num_return_sequences=1,
+            # eos_token_id=tokenizer.eos_token_id,
         )
         print(
             tokenizer.decode(
