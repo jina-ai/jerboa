@@ -7,10 +7,17 @@ from typer import Typer
 
 app = Typer(pretty_exceptions_enable=False)
 device = "cuda"
+quant_config = BitsAndBytesConfig(
+        load_in_8bit=True,
+    )
 
 peft_model_id = "jinaai/falcon-7b"
-config = PeftConfig.from_pretrained(peft_model_id, trust_remote=True)
-model = AutoModelForCausalLM.from_pretrained(config.base_model_name_or_path, trust_remote_code=True)
+config = PeftConfig.from_pretrained(peft_model_id, trust_remote=True, )
+model = AutoModelForCausalLM.from_pretrained(
+    config.base_model_name_or_path,
+    trust_remote_code=True,
+    quantization_config=quant_config,
+)
 model = PeftModel.from_pretrained(model, peft_model_id)
 tokenizer = AutoTokenizer.from_pretrained(config.base_model_name_or_path, trust_remote_code=True)
 
