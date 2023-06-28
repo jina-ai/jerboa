@@ -24,6 +24,7 @@ model = AutoModelForCausalLM.from_pretrained(
     quantization_config=quant_config,
 )
 model = PeftModel.from_pretrained(model, peft_model_id).to(device)
+model.eval()
 tokenizer = AutoTokenizer.from_pretrained(config.base_model_name_or_path, trust_remote_code=True)
 
 # model = model.to(device)
