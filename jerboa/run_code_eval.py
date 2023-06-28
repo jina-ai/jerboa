@@ -1,23 +1,36 @@
 import json
 
 from transformers import AutoModelForCausalLM, AutoTokenizer
+from peft import PeftModel, PeftConfig
 from typer import Typer
 
-app = Typer(pretty_exceptions_enable=False)
 
+app = Typer(pretty_exceptions_enable=False)
+device = "cuda"
+
+peft_model_id = "jinaai/falcon-7b"
+config = PeftConfig.from_pretrained(peft_model_id)
+model = AutoModelForCausalLM.from_pretrained(config.base_model_name_or_path)
+model = PeftModel.from_pretrained(model, peft_model_id)
+tokenizer = AutoTokenizer.from_pretrained(config.base_model_name_or_path)
+
+model = model.to(device)
+model.eval()
+
+# with torch.no_grad():
+#   outputs = model.generate(input_ids=inputs["input_ids"].to("cuda"), max_new_tokens=10)
+#   print(tokenizer.batch_decode(outputs.detach().cpu().numpy(), skip_special_tokens=True)[0])
+# # 'complaint'
 
 @app.command()
-def run_eval(checkpoint: str, device: str = "cuda", eval_file: str = "code_eval.jsonl"):
-    tokenizer = AutoTokenizer.from_pretrained(checkpoint)
-    model = AutoModelForCausalLM.from_pretrained(checkpoint).to(device)
-
+def run_eval(eval_file: str = "code_eval.jsonl"):
     eval_data = []
     with open(eval_file, 'r') as f:
         for line in f:
             eval_data.append(json.loads(line))
 
     results = []
-    for eval_instance in eval_data:
+    for eval_instance in eval_data[:2]:
         x = tokenizer.encode(
             "### Instruction: \n"
             + eval_instance['instruction']
@@ -46,9 +59,9 @@ def run_eval(checkpoint: str, device: str = "cuda", eval_file: str = "code_eval.
         )
         results.append(eval_instance)
 
-    with open(eval_file, 'w') as f:
-        for result in results:
-            f.write(json.dumps(result) + '\n')
+    # with open(eval_file, 'w') as f:
+    #     for result in results:
+    #         f.write(json.dumps(result) + '\n')
 
 
 if __name__ == "__main__":
