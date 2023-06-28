@@ -1,8 +1,13 @@
 import json
 
-from transformers import AutoModelForCausalLM, AutoTokenizer
 from peft import PeftModel, PeftConfig
 from typer import Typer
+from transformers import (
+    AutoConfig,
+    AutoModelForCausalLM,
+    AutoTokenizer,
+    BitsAndBytesConfig,
+)
 
 
 app = Typer(pretty_exceptions_enable=False)
