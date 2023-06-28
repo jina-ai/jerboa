@@ -8,6 +8,7 @@ from transformers import (
     AutoModelForCausalLM,
     AutoTokenizer,
     BitsAndBytesConfig,
+    GenerationConfig,
 )
 
 
