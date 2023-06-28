@@ -30,8 +30,6 @@ model.eval()
 
 tokenizer = AutoTokenizer.from_pretrained(config.base_model_name_or_path, trust_remote_code=True)
 
-# model = model.to(device)
-# model.eval()
 
 # with torch.no_grad():
 #   outputs = model.generate(input_ids=inputs["input_ids"].to("cuda"), max_new_tokens=10)
@@ -61,7 +59,7 @@ def run_eval(eval_file: str = "eval.jsonl"):
             y = model.generate(
                 input_ids = x['input_ids'],
                 attention_mask = x['attention_mask'],
-                generation_config=generation_config,
+                # generation_config=generation_config,
                 max_length=256,
                 do_sample=True,
                 top_p=0.95,
@@ -70,8 +68,8 @@ def run_eval(eval_file: str = "eval.jsonl"):
                 num_return_sequences=1,
                 eos_token_id=tokenizer.eos_token_id,
                 pad_token_id=tokenizer.eos_token_id,
-                repetition_penalty=1.5,
-                length_penalty=-5,
+                repetition_penalty=2,
+                length_penalty=-10,
             )
         print(
             tokenizer.decode(
