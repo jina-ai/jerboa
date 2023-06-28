@@ -69,8 +69,8 @@ def run_eval(eval_file: str = "eval.jsonl"):
                 num_return_sequences=1,
                 eos_token_id=tokenizer.eos_token_id,
                 pad_token_id=tokenizer.eos_token_id,
-                repetition_penalty=1.5,
-                length_penalty=-50,
+                repetition_penalty=2,
+                length_penalty=-100,
             )
         print(
             tokenizer.decode(
