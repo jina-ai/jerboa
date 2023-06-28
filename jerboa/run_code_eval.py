@@ -24,9 +24,9 @@ model = AutoModelForCausalLM.from_pretrained(
     quantization_config=quant_config,
 )
 model = PeftModel.from_pretrained(model, peft_model_id)
-tokenizer = AutoTokenizer.from_pretrained(config.base_model_name_or_path, trust_remote_code=True)
+tokenizer = AutoTokenizer.from_pretrained(config.base_model_name_or_path, trust_remote_code=True).to(device)
 
-model = model.to(device)
+# model = model.to(device)
 # model.eval()
 
 # with torch.no_grad():
@@ -51,9 +51,9 @@ def run_eval(eval_file: str = "code_eval.jsonl"):
             + "### Response: \n",
             return_tensors='pt',
         ).to(device)
-        print(x[0])
+
         y = model.generate(
-            x[0],
+            x,
             max_length=256,
             do_sample=True,
             top_p=0.95,
