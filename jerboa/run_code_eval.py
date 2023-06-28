@@ -43,7 +43,7 @@ def run_eval(eval_file: str = "code_eval.jsonl"):
 
     results = []
     for eval_instance in eval_data[:2]:
-        x = tokenizer.encode(
+        x = tokenizer(
             "### Instruction: \n"
             + eval_instance['instruction']
             + "### Input: \n"
