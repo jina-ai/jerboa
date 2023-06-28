@@ -44,7 +44,7 @@ def run_eval(eval_file: str = "eval.jsonl"):
             eval_data.append(json.loads(line))
 
     results = []
-    for eval_instance in eval_data[:2]:
+    for eval_instance in eval_data[12:15]:
         x = tokenizer(
             "### Instruction: \n"
             + eval_instance['instruction']
