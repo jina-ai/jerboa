@@ -52,7 +52,7 @@ def run_eval(eval_file: str = "code_eval.jsonl"):
             + "### Response: \n",
             return_tensors='pt',
         ).to(device)
-
+        print(x)
         y = model.generate(
             x["input_ids"],
             # max_length=256,
