@@ -55,6 +55,7 @@ def run_eval(eval_file: str = "code_eval.jsonl"):
             return_tensors='pt',
         ).to(device)
 
+        generation_config = GenerationConfig.from_pretrained(peft_model_id)
         with torch.no_grad():
             y = model.generate(
                 input_ids = x['input_ids'],
@@ -66,6 +67,7 @@ def run_eval(eval_file: str = "code_eval.jsonl"):
                 temperature=0.2,
                 num_return_sequences=1,
                 eos_token_id=tokenizer.eos_token_id,
+                generation_config=generation_config,
             )
         print(
             tokenizer.decode(
