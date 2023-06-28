@@ -1,5 +1,6 @@
 import json
 
+import torch
 from peft import PeftModel, PeftConfig
 from typer import Typer
 from transformers import (
@@ -25,6 +26,7 @@ model = AutoModelForCausalLM.from_pretrained(
 )
 model = PeftModel.from_pretrained(model, peft_model_id).to(device)
 model.eval()
+
 tokenizer = AutoTokenizer.from_pretrained(config.base_model_name_or_path, trust_remote_code=True)
 
 # model = model.to(device)
@@ -52,18 +54,19 @@ def run_eval(eval_file: str = "code_eval.jsonl"):
             + "### Response: \n",
             return_tensors='pt',
         ).to(device)
-        print(x)
-        print(type(model))
-        y = model.generate(
-            input_ids = x['input_ids'],
-            # max_length=256,
-            # do_sample=True,
-            # top_p=0.95,
-            # top_k=4,
-            # temperature=0.2,
-            # num_return_sequences=1,
-            # eos_token_id=tokenizer.eos_token_id,
-        )
+
+        with torch.no_grad():
+            y = model.generate(
+                input_ids = x['input_ids'],
+                attention_mask = x['attention_mask'],
+                max_length=256,
+                do_sample=True,
+                top_p=0.95,
+                top_k=4,
+                temperature=0.2,
+                num_return_sequences=1,
+                eos_token_id=tokenizer.eos_token_id,
+            )
         print(
             tokenizer.decode(
                 y[0], skip_special_tokens=True, clean_up_tokenization_spaces=False
