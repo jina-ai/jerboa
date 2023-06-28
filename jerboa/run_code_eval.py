@@ -55,7 +55,7 @@ def run_eval(eval_file: str = "code_eval.jsonl"):
         print(x)
         print(type(model))
         y = model.generate(
-            x["input_ids"],
+            input_ids = x['input_ids'],
             # max_length=256,
             # do_sample=True,
             # top_p=0.95,
