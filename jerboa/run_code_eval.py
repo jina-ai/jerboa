@@ -56,7 +56,7 @@ def run_eval(eval_file: str = "code_eval.jsonl"):
             return_tensors='pt',
         ).to(device)
         GEN_CONFIG_PATH = 'tiiuae/falcon-7b'
-        generation_config = GenerationConfig.from_pretrained(GEN_CONFIG_PATH
+        generation_config = GenerationConfig.from_pretrained(GEN_CONFIG_PATH)
         with torch.no_grad():
             y = model.generate(
                 input_ids = x['input_ids'],
