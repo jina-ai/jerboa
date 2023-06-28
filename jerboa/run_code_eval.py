@@ -51,9 +51,9 @@ def run_eval(eval_file: str = "code_eval.jsonl"):
             + "### Response: \n",
             return_tensors='pt',
         ).to(device)
-        print(x)
+        print(x[0])
         y = model.generate(
-            x,
+            x[0],
             max_length=256,
             do_sample=True,
             top_p=0.95,
