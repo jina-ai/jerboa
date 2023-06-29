@@ -4,7 +4,6 @@ import torch
 from peft import PeftModel, PeftConfig
 from typer import Typer
 from transformers import (
-    AutoConfig,
     AutoModelForCausalLM,
     AutoTokenizer,
     BitsAndBytesConfig,
@@ -15,11 +14,14 @@ from transformers import (
 app = Typer(pretty_exceptions_enable=False)
 device = "cuda"
 quant_config = BitsAndBytesConfig(
-        load_in_8bit=True,
-    )
+    load_in_8bit=True,
+)
 
 peft_model_id = "jinaai/falcon-7b"
-config = PeftConfig.from_pretrained(peft_model_id, trust_remote=True, )
+config = PeftConfig.from_pretrained(
+    peft_model_id,
+    trust_remote=True,
+)
 model = AutoModelForCausalLM.from_pretrained(
     config.base_model_name_or_path,
     trust_remote_code=True,
@@ -28,13 +30,16 @@ model = AutoModelForCausalLM.from_pretrained(
 model = PeftModel.from_pretrained(model, peft_model_id).to(device)
 model.eval()
 
-tokenizer = AutoTokenizer.from_pretrained(config.base_model_name_or_path, trust_remote_code=True)
+tokenizer = AutoTokenizer.from_pretrained(
+    config.base_model_name_or_path, trust_remote_code=True
+)
 
 
 # with torch.no_grad():
 #   outputs = model.generate(input_ids=inputs["input_ids"].to("cuda"), max_new_tokens=10)
 #   print(tokenizer.batch_decode(outputs.detach().cpu().numpy(), skip_special_tokens=True)[0])
 # # 'complaint'
+
 
 @app.command()
 def run_eval(eval_file: str = "eval.jsonl"):
@@ -55,11 +60,11 @@ def run_eval(eval_file: str = "eval.jsonl"):
             return_tensors='pt',
         ).to(device)
         GEN_CONFIG_PATH = 'tiiuae/falcon-7b'
-        generation_config = GenerationConfig.from_pretrained(GEN_CONFIG_PATH)
+        GenerationConfig.from_pretrained(GEN_CONFIG_PATH)
         with torch.no_grad():
             y = model.generate(
-                input_ids = x['input_ids'],
-                attention_mask = x['attention_mask'],
+                input_ids=x['input_ids'],
+                attention_mask=x['attention_mask'],
                 # generation_config=generation_config,
                 max_length=1048,
                 do_sample=True,
