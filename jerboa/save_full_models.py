@@ -12,7 +12,7 @@ def save_full_model(
     device_map: str = "auto",
     load_in_4bit: bool = False,
     load_in_8bit: bool = True,
-    lora_weights: str = "artifacts/lora_weight:v12/",
+    lora_weights: str = "jina-ai/jerboa/lora_weight:v12",
 ):
     quant_config = BitsAndBytesConfig(
         load_in_4bit=load_in_4bit,
