@@ -164,7 +164,7 @@ def train(
 
     # Device_map is not compatible with CPU training
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
-    device_map = "auto" if device == "cuda" else None
+    device_map = "auto" if device == 'cuda' else None
     world_size = int(os.environ.get("WORLD_SIZE", 1))
 
     # Only apply if we have more than one GPU, not if we have no GPU
