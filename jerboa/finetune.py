@@ -74,10 +74,6 @@ def load_model_tokenizer(
         trust_remote_code=True,
     )
 
-    # Move model to cpu in debugging mode
-    # if debug and device == "cpu":
-    #     model = model.to(device)
-
     # Prepare model for training
     model = prepare_model_for_kbit_training(model)
     lora_config = LoraConfig(**lora_config)
