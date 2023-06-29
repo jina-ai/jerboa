@@ -75,8 +75,8 @@ def load_model_tokenizer(
     )
 
     # Move model to cpu in debugging mode
-    if debug and device == "cpu":
-        model = model.to(device)
+    # if debug and device == "cpu":
+    #     model = model.to(device)
 
     # Prepare model for training
     model = prepare_model_for_kbit_training(model)
@@ -161,6 +161,7 @@ def train(
         jerboa_path = osp.dirname(inspect.getfile(jerboa))
         eval_file = osp.join(jerboa_path, 'resources/eval_sample.jsonl')
         eval_limit = 1
+        os.environ["CUDA_VISIBLE_DEVICES"]=""
 
     gradient_accumulation_steps = batch_size // micro_batch_size
 
