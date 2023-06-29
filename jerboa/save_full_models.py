@@ -34,6 +34,7 @@ def save_full_model(
     model = PeftModel.from_pretrained(
         model,
         lora_weights,
+        config=model_config,
         torch_dtype=torch.float16,
     )
     model.base_model.save_pretrained("full_model")
