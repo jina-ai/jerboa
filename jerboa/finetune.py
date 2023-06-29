@@ -74,10 +74,6 @@ def load_model_tokenizer(
         trust_remote_code=True,
     )
 
-    # Move model to cpu in debugging mode
-    if debug and device == "cpu":
-        model = model.to(device)
-
     # Prepare model for training
     model = prepare_model_for_kbit_training(model)
     lora_config = LoraConfig(**lora_config)
@@ -166,9 +162,17 @@ def train(
 
     prompter = Prompter(prompt_template_name)
 
-    device_map = "auto"
+    # Device_map is not compatible with CPU training
+    device = 'cuda' if torch.cuda.is_available() else 'cpu'
+    device_map = "auto" if device == 'cuda' else None
     world_size = int(os.environ.get("WORLD_SIZE", 1))
-    ddp = world_size != 1
+
+    # Only apply if we have more than one GPU, not if we have no GPU
+    def is_distributed():
+        return
+
+    world_size = int(os.environ.get("WORLD_SIZE", 1))
+    ddp = world_size > 1
     if ddp:
         device_map = {"": int(os.environ.get("LOCAL_RANK") or 0)}
         gradient_accumulation_steps = gradient_accumulation_steps // world_size
@@ -194,8 +198,6 @@ def train(
         os.environ["WANDB_MODE"] = "disabled"
     if use_wandb and len(wandb_watch) > 0:
         os.environ["WANDB_WATCH"] = wandb_watch
-
-    device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
     # No quantization available on cpu
     if device == 'cpu' and load_in_4bit:
