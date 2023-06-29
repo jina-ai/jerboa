@@ -195,7 +195,6 @@ def train(
     if use_wandb and len(wandb_watch) > 0:
         os.environ["WANDB_WATCH"] = wandb_watch
 
-
     # No quantization available on cpu
     if device == 'cpu' and load_in_4bit:
         raise Exception("Quantization (4bit and 8bit) does not work on cpu")
