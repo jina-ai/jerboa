@@ -166,7 +166,7 @@ def train(
 
     prompter = Prompter(prompt_template_name)
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
-    device_map = "auto" if device == "cuda" else None
+    device_map = "auto" # if device == "cuda" else None
     world_size = int(os.environ.get("WORLD_SIZE", 1))
     ddp = world_size > 1
     if ddp:
