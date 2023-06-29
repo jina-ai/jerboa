@@ -161,13 +161,12 @@ def train(
         jerboa_path = osp.dirname(inspect.getfile(jerboa))
         eval_file = osp.join(jerboa_path, 'resources/eval_sample.jsonl')
         eval_limit = 1
-        os.environ["CUDA_VISIBLE_DEVICES"] = ""
 
     gradient_accumulation_steps = batch_size // micro_batch_size
 
     prompter = Prompter(prompt_template_name)
-
-    device_map = "auto"
+    device = 'cuda' if torch.cuda.is_available() else 'cpu'
+    device_map = "auto" if device == "cuda" else None
     world_size = int(os.environ.get("WORLD_SIZE", 1))
     ddp = world_size > 1
     if ddp:
@@ -196,7 +195,6 @@ def train(
     if use_wandb and len(wandb_watch) > 0:
         os.environ["WANDB_WATCH"] = wandb_watch
 
-    device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
     # No quantization available on cpu
     if device == 'cpu' and load_in_4bit:
