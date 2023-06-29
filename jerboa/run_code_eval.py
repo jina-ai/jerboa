@@ -44,7 +44,7 @@ def run_eval(eval_file: str = "eval.jsonl"):
             eval_data.append(json.loads(line))
 
     results = []
-    targets = [18, 20, 21, 22]
+    targets = [18, 19, 20, 21, 22]
     for eval_instance in map(eval_data.__getitem__, targets):
         x = tokenizer(
             "### Instruction: \n"
