@@ -3529,7 +3529,7 @@ vision = ["Pillow"]
 type = "git"
 url = "https://github.com/huggingface/transformers.git"
 reference = "HEAD"
-resolved_reference = "4f1b31c2ee2822618d8433a71627ec18e9f2e2d3"
+resolved_reference = "2dc5e1a120176594ed2dcb7d2f02a5dd62266232"
 
 [[package]]
 name = "typer"
