@@ -29,7 +29,7 @@ datasets = "^2.12.0"
 peft = { git = "https://github.com/huggingface/peft.git" }
 transformers =  { git = "https://github.com/huggingface/transformers.git" }
 sentencepiece = "^0.1.99"
-accelerate = { git = "https://github.com/huggingface/accelerate.git" }
+accelerate = "0.20.3" # { git = "https://github.com/huggingface/accelerate.git" }
 wandb = "^0.15.3"
 scipy = "^1.9.0"
 einops = "^0.6.1"
