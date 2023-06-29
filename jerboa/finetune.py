@@ -173,7 +173,6 @@ def train(
         device_map = {"": int(os.environ.get("LOCAL_RANK") or 0)}
         gradient_accumulation_steps = gradient_accumulation_steps // world_size
 
-    print(device_map)
     # Check if parameter passed or if set within environ
     use_wandb = use_wandb and (
         len(wandb_project) > 0
