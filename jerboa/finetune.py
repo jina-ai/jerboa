@@ -161,7 +161,7 @@ def train(
         jerboa_path = osp.dirname(inspect.getfile(jerboa))
         eval_file = osp.join(jerboa_path, 'resources/eval_sample.jsonl')
         eval_limit = 1
-        os.environ["CUDA_VISIBLE_DEVICES"]=""
+        os.environ["CUDA_VISIBLE_DEVICES"] = ""
 
     gradient_accumulation_steps = batch_size // micro_batch_size
 
