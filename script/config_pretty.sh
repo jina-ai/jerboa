@@ -13,7 +13,7 @@ poetry config virtualenvs.create false \
 poetry run pip install torch
 
 
-yes | curl -sS https://starship.rs/install.sh | sh 
+yes | curl -sS https://starship.rs/install.sh 
 cd ..
 echo 'eval "$(starship init bash)"' >> ~/.bashrc
 source ~/.bashrc
