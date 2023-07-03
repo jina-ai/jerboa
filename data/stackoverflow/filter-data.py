@@ -3,7 +3,7 @@ import os
 import random
 import xml.etree.ElementTree as ET
 
-base_path = '/home/johannes/Downloads/SO-dump/stackoverflow.com-Posts/'
+base_path = '/path/to/SO/dump'
 filepath = os.path.join(base_path, 'Posts.xml')
 filtered_path = os.path.join(base_path, 'so-filtered.json')
 
