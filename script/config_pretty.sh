@@ -16,7 +16,7 @@ poetry run pip install torch
 curl -sS https://starship.rs/install.sh | sh 
 cd ..
 echo 'eval "$(starship init bash)"' >> ~/.bashrc
-source .bashrc
+source ~/.bashrc
 cd jerboa
 
 wandb login
