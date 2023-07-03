@@ -1,4 +1,5 @@
 # Setup of runpod instance
+cd root
 apt update -y
 apt install gh screen neovim nvtop -y
 pip install -U poetry
