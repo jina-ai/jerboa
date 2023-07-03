@@ -13,13 +13,13 @@ poetry config virtualenvs.create false \
 poetry run pip install torch
 
 
-yes | curl -sS https://starship.rs/install.sh 
+yes | curl -sS https://starship.rs/install.sh | sh
 cd ..
 echo 'eval "$(starship init bash)"' >> ~/.bashrc
-source ~/.bashrc
 cd jerboa
 
 wandb login
+source ~/.bashrc
 screen -S training_screen
 
 
