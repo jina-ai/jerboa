@@ -1,7 +1,7 @@
 import json
 
 import torch
-from peft import PeftModel, PeftConfig
+from peft import PeftConfig
 from typer import Typer
 from transformers import (
     AutoModelForCausalLM,
@@ -9,11 +9,11 @@ from transformers import (
     BitsAndBytesConfig,
     GenerationConfig,
 )
-from jerboa.utils.prompter import Prompter
 
 
 app = Typer(pretty_exceptions_enable=False)
 device = "cuda"
+device_map = "auto"
 quant_config = BitsAndBytesConfig(
     load_in_8bit=True,
 )
@@ -27,13 +27,16 @@ model = AutoModelForCausalLM.from_pretrained(
     config.base_model_name_or_path,
     trust_remote_code=True,
     quantization_config=quant_config,
+    device_map=device_map,
 )
-model = PeftModel.from_pretrained(model, peft_model_id).to(device)
+
 model.eval()
 
 tokenizer = AutoTokenizer.from_pretrained(
-    config.base_model_name_or_path, trust_remote_code=True
+    config.base_model_name_or_path,
+    trust_remote_code=True,
 )
+tokenizer.pad_token = tokenizer.eos_token
 
 
 @app.command()
@@ -44,7 +47,7 @@ def run_eval(eval_file: str = "eval.jsonl"):
             eval_data.append(json.loads(line))
 
     results = []
-    targets = list(range(3))
+    targets = list(range(2))
     # Create tokenized data
     # Create prompts
     prompts = []
@@ -56,11 +59,12 @@ def run_eval(eval_file: str = "eval.jsonl"):
             + eval_instance["instances"][0]["input"]
             + "### Response: \n"
         )
-
+    print(prompts)
     tokenized_prompts = tokenizer(
         prompts,
+        padding=True,
         return_tensors='pt',
-    )
+    ).to(device)
 
     GEN_CONFIG_PATH = 'tiiuae/falcon-7b'
     GenerationConfig.from_pretrained(GEN_CONFIG_PATH)
@@ -68,7 +72,7 @@ def run_eval(eval_file: str = "eval.jsonl"):
         y = model.generate(
             input_ids=tokenized_prompts['input_ids'],
             attention_mask=tokenized_prompts['attention_mask'],
-            #generation_config=generation_config,
+            # generation_config=generation_config,
             max_length=1048,
             do_sample=True,
             top_p=0.95,
@@ -80,12 +84,11 @@ def run_eval(eval_file: str = "eval.jsonl"):
             repetition_penalty=2.0,
             length_penalty=-100,
         )
-
+        print(y)
         result = tokenizer.decode(
             y[0], skip_special_tokens=True, clean_up_tokenization_spaces=False
         )
 
-        pr
     with open(eval_file, 'w') as f:
         for result in results:
             f.write(json.dumps(result) + '\n')
