@@ -296,7 +296,7 @@ def train(
             num_train_epochs=num_epochs,
             learning_rate=learning_rate,
             fp16=not debug,
-            logging_steps=10,
+            logging_steps=1,
             optim="paged_adamw_8bit" if device == "cuda" else "adamw_torch",
             evaluation_strategy="steps" if val_set_size > 0 else "no",
             save_strategy="no",
