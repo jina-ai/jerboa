@@ -3,88 +3,96 @@ from transformers import (
     AutoModelForCausalLM,
     AutoTokenizer,
     BitsAndBytesConfig,
+    GenerationConfig,
 )
 from peft import PeftConfig
 from jerboa.utils.prompter import Prompter
+import numpy as np
 
-device = "cuda"
-device_map = "auto"
-quant_config = BitsAndBytesConfig(
+
+# Define constants
+QUANT_CONFIG = BitsAndBytesConfig(
     load_in_8bit=True,
 )
 
-peft_model_id = "jinaai/falcon-7b"
-config = PeftConfig.from_pretrained(
-    peft_model_id,
+PEFT_MODEL_ID = "jinaai/falcon-7b"
+EVAL_FILE = "eval.jsonl"
+
+PEFT_CONFIG = PeftConfig.from_pretrained(
+    PEFT_MODEL_ID,
     trust_remote=True,
 )
+
 model = AutoModelForCausalLM.from_pretrained(
-    config.base_model_name_or_path,
+    PEFT_CONFIG.base_model_name_or_path,
     trust_remote_code=True,
-    quantization_config=quant_config,
-    device_map=device_map,
+    quantization_config=QUANT_CONFIG,
 )
 
-model.eval()
-
 tokenizer = AutoTokenizer.from_pretrained(
-    config.base_model_name_or_path,
+    PEFT_CONFIG.base_model_name_or_path,
     trust_remote_code=True,
+    padding_side='left',
 )
 tokenizer.pad_token = tokenizer.eos_token
 
-
+model.eval()
 prompter = Prompter('alpaca')
-eval_file: str = "eval.jsonl"
-eval_data = []
-with open(eval_file, 'r') as f:
-    for line in f:
-        eval_data.append(json.loads(line))
 
-results = []
-targets = list(range(2))
-# Create tokenized data
-# Create prompts
-prompts = []
-for eval_instance in map(eval_data.__getitem__, targets):
-    prompt = (
-        prompter.generate_prompt(
-            eval_instance['instruction'],
-            eval_instance['instances'][0]['input'],
+GENERATION_DICTIONARY = {
+    'max_length': 1024,
+    'do_sample': True,
+    'top_k': 50,
+    'temperature': 0.3,
+    'num_return_sequences': 1,
+    'eos_token_id': tokenizer.eos_token_id,
+    'pad_token_id': tokenizer.eos_token_id,
+    'repetition_penalty': 3.0,
+    'length_penalty': -100,
+}
+
+
+def load_data():
+    eval_data = []
+    with open(EVAL_FILE, 'r') as f:
+        for line in f:
+            eval_data.append(json.loads(line))
+
+    return eval_data
+
+
+def main():
+    results = []
+    targets = list(range(45))
+
+    eval_data = load_data()
+    for eval_instance in map(eval_data.__getitem__, targets):
+        prompt = (
+            prompter.generate_prompt(
+                eval_instance['instruction'],
+                eval_instance['instances'][0]['input'],
+            )
         )
-    )
-    tokenized_prompt = tokenizer(
-        prompt,
-        padding=True,
-        return_tensors='pt',
-    ).to(0)
+        tokenized_prompt = tokenizer(
+            prompt,
+            padding=True,
+            return_tensors='pt',
+        ).to(0)
 
+        output = model.generate(
+            input_ids=tokenized_prompt['input_ids'],
+            attention_mask=tokenized_prompt['attention_mask'],
+            generation_config=GenerationConfig(**GENERATION_DICTIONARY)
+        )
 
-    output = model.generate(
-        input_ids=tokenized_prompt['input_ids'],
-        attention_mask=tokenized_prompt['attention_mask'],
-        # generation_config=generation_config,
-        max_length=512,
-        do_sample=True,
-        top_p=0.75,
-        top_k=50,
-        temperature=0.1,
-        num_return_sequences=1,
-        eos_token_id=tokenizer.eos_token_id,
-        pad_token_id=tokenizer.eos_token_id,
-        repetition_penalty=3.0,
-        length_penalty=-100,
-    )
-    result = prompter.get_response(tokenizer.decode(
-        output[0].tolist(),
-        skip_special_tokens=True,
-        clean_up_tokenization_spaces=False
-    ))
+        result = tokenizer.decode(
+            output[0].tolist(),
+            skip_special_tokens=True,
+            clean_up_tokenization_spaces=False
+        )
 
-    print("Input:", eval_instance)
-    print("Prompt:", prompt)
-    print("Result:", result)
+        print("Result:", result.split("### Response:")[1])
 
 
 
-print("Done")
+main()

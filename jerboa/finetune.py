@@ -314,7 +314,7 @@ def train(
             tokenizer, pad_to_multiple_of=8, return_tensors="pt", padding=True
         ),
     )
-    model.config.use_cache = False
+    model.PEFT_CONFIG.use_cache = False
 
     if torch.__version__ >= "2" and sys.platform != "win32":
         model = torch.compile(model)
