@@ -323,29 +323,32 @@ def train(
 
     if is_master_process:
         lora_dir = f"{output_dir}/lora_adapter"
+        try:
+            if eval_file:
+                results = evaluate(
+                    model=model,
+                    tokenizer=tokenizer,
+                    eval_file=eval_file,
+                    eval_limit=eval_limit,
+                )
 
-        if eval_file:
-            results = evaluate(
-                model=model,
-                tokenizer=tokenizer,
-                eval_file=eval_file,
-                eval_limit=eval_limit,
-            )
+                if use_wandb:
+                    columns = list(results[0].keys())
+                    results_data = [[d[key] for key in columns] for d in results]
+                    eval_table = wandb.Table(columns=columns, data=results_data)
+                    run.log({"Evaluation": eval_table})
+                else:
+                    print(results)
+        except Exception:
+            print("Evaluation failed")
 
-            if use_wandb:
-                columns = list(results[0].keys())
-                results_data = [[d[key] for key in columns] for d in results]
-                eval_table = wandb.Table(columns=columns, data=results_data)
-                run.log({"Evaluation": eval_table})
-            else:
-                print(results)
+        finally:
+            model.save_pretrained(lora_dir)
 
-        model.save_pretrained(lora_dir)
-
-        if wandb_log_model and use_wandb:
-            artifact = wandb.Artifact(name='lora_weight', type='model')
-            artifact.add_dir(lora_dir)
-            run.log_artifact(artifact)
+            if wandb_log_model and use_wandb:
+                artifact = wandb.Artifact(name='lora_weight', type='model')
+                artifact.add_dir(lora_dir)
+                run.log_artifact(artifact)
 
 
 if __name__ == "__main__":
