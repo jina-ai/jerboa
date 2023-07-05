@@ -8,6 +8,7 @@ from typing import Dict, List, Optional, Tuple
 
 import torch
 import transformers
+import typer
 import wandb
 from peft import LoraConfig, PeftModel, get_peft_model, prepare_model_for_kbit_training
 from transformers import (
@@ -122,6 +123,7 @@ def train(
     learning_rate: float = 3e-4,
     cutoff_len: int = 256,
     val_set_size: int = 2000,
+    adam_betas: Tuple[float, float] = typer.Option((None, None)),
     # lora hyperparams
     lora_r: int = 8,
     lora_alpha: int = 16,
@@ -285,33 +287,38 @@ def train(
         model.is_parallelizable = True
         model.model_parallel = True
 
+    args_traing = dict(
+        per_device_train_batch_size=micro_batch_size,
+        gradient_accumulation_steps=gradient_accumulation_steps,
+        warmup_steps=100,
+        num_train_epochs=num_epochs,
+        learning_rate=learning_rate,
+        fp16=not debug,
+        logging_steps=10,
+        optim="paged_adamw_8bit" if device == "cuda" else "adamw_torch",
+        evaluation_strategy="steps" if val_set_size > 0 else "no",
+        save_strategy="no",
+        eval_steps=200 if val_set_size > 0 else None,
+        save_steps=200,
+        output_dir=output_dir,
+        save_total_limit=3,
+        load_best_model_at_end=False,
+        ddp_find_unused_parameters=False if ddp else None,
+        group_by_length=group_by_length,
+        report_to="wandb" if use_wandb else "none",
+        run_name=wandb_run_name if use_wandb else None,
+    )
+
+    if adam_betas[0]:
+        args_traing['adam_beta1'] = adam_betas[0]
+    if adam_betas[1]:
+        args_traing['adam_beta1'] = adam_betas[0]
+
     trainer = transformers.Trainer(
         model=model,
         train_dataset=train_data,
         eval_dataset=val_data,
-        args=transformers.TrainingArguments(
-            per_device_train_batch_size=micro_batch_size,
-            gradient_accumulation_steps=gradient_accumulation_steps,
-            warmup_steps=100,
-            num_train_epochs=num_epochs,
-            learning_rate=learning_rate,
-            fp16=not debug,
-            logging_steps=10,
-            optim="paged_adamw_8bit" if device == "cuda" else "adamw_torch",
-            adam_beta1=0.9,
-            adam_beta2=0.95,
-            evaluation_strategy="steps" if val_set_size > 0 else "no",
-            save_strategy="no",
-            eval_steps=200 if val_set_size > 0 else None,
-            save_steps=200,
-            output_dir=output_dir,
-            save_total_limit=3,
-            load_best_model_at_end=False,
-            ddp_find_unused_parameters=False if ddp else None,
-            group_by_length=group_by_length,
-            report_to="wandb" if use_wandb else "none",
-            run_name=wandb_run_name if use_wandb else None,
-        ),
+        args=transformers.TrainingArguments(**args_traing),
         data_collator=transformers.DataCollatorForSeq2Seq(
             tokenizer, pad_to_multiple_of=8, return_tensors="pt", padding=True
         ),
