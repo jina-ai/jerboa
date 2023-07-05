@@ -323,22 +323,24 @@ def train(
 
     if is_master_process:
         lora_dir = f"{output_dir}/lora_adapter"
+        try:
+            if eval_file:
+                results = evaluate(
+                    model=model,
+                    tokenizer=tokenizer,
+                    eval_file=eval_file,
+                    eval_limit=eval_limit,
+                )
 
-        if eval_file:
-            results = evaluate(
-                model=model,
-                tokenizer=tokenizer,
-                eval_file=eval_file,
-                eval_limit=eval_limit,
-            )
-
-            if use_wandb:
-                columns = list(results[0].keys())
-                results_data = [[d[key] for key in columns] for d in results]
-                eval_table = wandb.Table(columns=columns, data=results_data)
-                run.log({"Evaluation": eval_table})
-            else:
-                print(results)
+                if use_wandb:
+                    columns = list(results[0].keys())
+                    results_data = [[d[key] for key in columns] for d in results]
+                    eval_table = wandb.Table(columns=columns, data=results_data)
+                    run.log({"Evaluation": eval_table})
+                else:
+                    print(results)
+        except:
+            pass
 
         model.save_pretrained(lora_dir)
 
