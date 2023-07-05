@@ -342,12 +342,13 @@ def train(
         except:
             pass
 
-        model.save_pretrained(lora_dir)
+        finally:
+            model.save_pretrained(lora_dir)
 
-        if wandb_log_model and use_wandb:
-            artifact = wandb.Artifact(name='lora_weight', type='model')
-            artifact.add_dir(lora_dir)
-            run.log_artifact(artifact)
+            if wandb_log_model and use_wandb:
+                artifact = wandb.Artifact(name='lora_weight', type='model')
+                artifact.add_dir(lora_dir)
+                run.log_artifact(artifact)
 
 
 if __name__ == "__main__":
