@@ -72,19 +72,18 @@ def evaluate(
         if eval_limit != 0 and i == eval_limit:
             break
         result = {
-                "id": i,
-                "instruction": eval_instance["instruction"],
-                "output": output,
-                # "input": eval_instance["instances"][0]["input"],
-                # "alpaca_lora_output": eval_instance["instances"][0][
-                #     "stanford_alpaca_output"
-                # ],
-                # "human_evaluation": eval_instance["instances"][0]["output"],
-                }
+            "id": i,
+            "instruction": eval_instance["instruction"],
+            "output": output,
+            # "input": eval_instance["instances"][0]["input"],
+            # "alpaca_lora_output": eval_instance["instances"][0][
+            #     "stanford_alpaca_output"
+            # ],
+            # "human_evaluation": eval_instance["instances"][0]["output"],
+        }
         for x in eval_instance["instances"][0]:
             if x not in result:
                 result[x] = eval_instance["instances"][0][x]
         results.append(result)
-
 
     return results

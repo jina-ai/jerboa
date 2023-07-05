@@ -339,8 +339,8 @@ def train(
                     run.log({"Evaluation": eval_table})
                 else:
                     print(results)
-        except:
-            pass
+        except Exception:
+            print("Evaluation failed")
 
         finally:
             model.save_pretrained(lora_dir)
