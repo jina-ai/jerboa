@@ -22,8 +22,8 @@ QUANT_CONFIG = BitsAndBytesConfig(
         load_in_8bit=False,
     )
 
-BASE_MODEL = 'tiiuae/falcon-7b'
-LORA_WEIGHTS = '../artifacts/falcon7b'
+BASE_MODEL = 'tiiuae/falcon-40b'
+LORA_WEIGHTS = '../artifacts/falcon40b'
 MODEL_CONFIG = AutoConfig.from_pretrained(BASE_MODEL, trust_remote_code=True)
 model = AutoModelForCausalLM.from_pretrained(
     pretrained_model_name_or_path=BASE_MODEL,
