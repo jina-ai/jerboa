@@ -28,7 +28,7 @@ MODEL_CONFIG = AutoConfig.from_pretrained(BASE_MODEL, trust_remote_code=True)
 model = AutoModelForCausalLM.from_pretrained(
     pretrained_model_name_or_path=BASE_MODEL,
     torch_dtype=torch.float16,
-    device_map='auto',
+    device_map='balanced',
     config=MODEL_CONFIG,
     # load_in_8bit=True,
     quantization_config=QUANT_CONFIG,
