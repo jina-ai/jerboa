@@ -50,12 +50,12 @@ prompter = Prompter('')
 
 def evaluate(
     instruction,
+    max_new_tokens,
     input=None,
     temperature=0.1,
     top_p=0.75,
     top_k=40,
     num_beams=4,
-    max_new_tokens=128,
     **kwargs,
 ):
     device = 'cuda'
@@ -84,13 +84,9 @@ def evaluate(
     return prompter.get_response(output)
 
 
-def greet(name):
-    return "Hello " + name + "!"
-
-
 demo = gr.Interface(
     fn=evaluate,
-    inputs=gr.Textbox(lines=2, placeholder="Name Here..."),
+    inputs=[gr.Textbox(lines=2, placeholder="Prompt here"), gr.Slider(5, 248)],
     outputs="text",
 )
 demo.launch(share=True)
