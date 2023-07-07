@@ -19,6 +19,10 @@ QUANT_CONFIG = BitsAndBytesConfig(
 BASE_MODEL = 'tiiuae/falcon-40b'
 LORA_WEIGHTS = '../artifacts/falcon40b_code_alpaca'
 MODEL_CONFIG = AutoConfig.from_pretrained(BASE_MODEL, trust_remote_code=True)
+PEFT_CONFIG = PeftConfig.from_pretrained(
+    LORA_WEIGHTS,
+    trust_remote=True,
+)
 model = AutoModelForCausalLM.from_pretrained(
     pretrained_model_name_or_path=BASE_MODEL,
     torch_dtype=torch.float16,
@@ -27,11 +31,6 @@ model = AutoModelForCausalLM.from_pretrained(
     # load_in_8bit=True,
     quantization_config=QUANT_CONFIG,
     trust_remote_code=True,
-)
-
-PEFT_CONFIG = PeftConfig.from_pretrained(
-    LORA_WEIGHTS,
-    trust_remote=True,
 )
 
 model = PeftModel.from_pretrained(
