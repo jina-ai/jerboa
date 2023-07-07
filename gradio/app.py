@@ -19,7 +19,7 @@ import torch
 
 # Load model
 QUANT_CONFIG = BitsAndBytesConfig(
-        load_in_8bit=False,
+        load_in_8bit=True,
     )
 
 BASE_MODEL = 'tiiuae/falcon-40b'
