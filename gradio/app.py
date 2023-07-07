@@ -1,26 +1,20 @@
 import gradio as gr
-import json
-from typing import List, Tuple, Dict, Union, Any
-from pathlib import Path
-import os
 from jerboa.utils.prompter import Prompter
 from transformers import (
     AutoModelForCausalLM,
     AutoTokenizer,
     BitsAndBytesConfig,
     GenerationConfig,
-    PreTrainedTokenizer,
     AutoConfig,
 )
 from peft import PeftConfig, PeftModel
 import torch
 
 
-
 # Load model
 QUANT_CONFIG = BitsAndBytesConfig(
-        load_in_8bit=True,
-    )
+    load_in_8bit=True,
+)
 
 BASE_MODEL = 'tiiuae/falcon-40b'
 LORA_WEIGHTS = '../artifacts/falcon40b'
@@ -43,7 +37,7 @@ model = PeftModel.from_pretrained(
 PEFT_CONFIG = PeftConfig.from_pretrained(
     LORA_WEIGHTS,
     trust_remote=True,
-    )
+)
 
 tokenizer = AutoTokenizer.from_pretrained(
     PEFT_CONFIG.base_model_name_or_path,
@@ -52,6 +46,7 @@ tokenizer = AutoTokenizer.from_pretrained(
 )
 tokenizer.pad_token = tokenizer.eos_token
 prompter = Prompter('')
+
 
 def evaluate(
     instruction,
@@ -89,10 +84,8 @@ def evaluate(
     return prompter.get_response(output)
 
 
-
 def greet(name):
     return "Hello " + name + "!"
-
 
 
 demo = gr.Interface(
