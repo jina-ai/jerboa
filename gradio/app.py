@@ -86,7 +86,7 @@ def evaluate(
 
 demo = gr.Interface(
     fn=evaluate,
-    inputs=[gr.Textbox(lines=2, placeholder="Prompt here"), gr.Slider(5, 248)],
+    inputs=[gr.Textbox(lines=2, placeholder="Prompt here"), gr.Slider(5, 1024)],
     outputs="text",
 )
 demo.launch(share=True)
