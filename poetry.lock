@@ -2886,6 +2886,16 @@ files = [
     {file = "rpds_py-0.8.3-pp38-pypy38_pp73-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:de2e483f29aa252e4af45f7c2df98342a91768f9b9b04a23ca6da9c1f365208d"},
     {file = "rpds_py-0.8.3-pp38-pypy38_pp73-manylinux_2_17_armv7l.manylinux2014_armv7l.whl", hash = "sha256:00e25ae6e74efffe761a39be7b92a3cb7dbdf2e96d8653995c77f3aaaa46d6f7"},
     {file = "rpds_py-0.8.3-pp38-pypy38_pp73-manylinux_2_17_ppc64le.manylinux2014_ppc64le.whl", hash = "sha256:d94ac0a659589ceb8ad4c7e0464ea928871c1b791f8a710babc018e2a1a74533"},
+    {file = "rpds_py-0.8.3-pp38-pypy38_pp73-manylinux_2_17_s390x.manylinux2014_s390x.whl", hash = "sha256:f49e2a7c0462bf6b414d2f553ac5375d833c0e8b0373d5bb00d629c4c2b2f37d"},
+    {file = "rpds_py-0.8.3-pp38-pypy38_pp73-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:4890dbcbb1e9b7e209c252658828fa0cff53ad8a46ce6193b65906e5b24a6e7c"},
+    {file = "rpds_py-0.8.3-pp38-pypy38_pp73-manylinux_2_5_i686.manylinux1_i686.whl", hash = "sha256:94ac90626b0a2e783a55658a34f41cdbdafb7269e769af8bdf552dd7bfc598d5"},
+    {file = "rpds_py-0.8.3-pp39-pypy39_pp73-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:f8b53cc79ace2f0dba3a98a8a22d7afbecfe54097cc8f942002a954012b2846f"},
+    {file = "rpds_py-0.8.3-pp39-pypy39_pp73-manylinux_2_17_armv7l.manylinux2014_armv7l.whl", hash = "sha256:250c3a18a1c84f914cf4b761d8a011bee8825df925f6f87fc4e9b6a854394a8e"},
+    {file = "rpds_py-0.8.3-pp39-pypy39_pp73-manylinux_2_17_ppc64le.manylinux2014_ppc64le.whl", hash = "sha256:5565a984131d63b9a3b7542f74d1d57f38509da17afe72c885e32a4c2f347d82"},
+    {file = "rpds_py-0.8.3-pp39-pypy39_pp73-manylinux_2_17_s390x.manylinux2014_s390x.whl", hash = "sha256:cbf962ae0f368af4c600d7d42bbb08f291f64f616fa46cd60e7db00530825b05"},
+    {file = "rpds_py-0.8.3-pp39-pypy39_pp73-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:25f7ff27c5bc459bd99742fe0b024a7a26239f5c32f33774a86a6eb65ac8f980"},
+    {file = "rpds_py-0.8.3-pp39-pypy39_pp73-manylinux_2_5_i686.manylinux1_i686.whl", hash = "sha256:3e8ee7237a89998d650a879e4c9b8bc19c33e92acb0077e99161c2a9a54e7c1f"},
+    {file = "rpds_py-0.8.3.tar.gz", hash = "sha256:3620464fe3fee23dd1bf7b68546b0120bec4713fd99e5f63829d8bcc13336376"},
 ]
 
 [[package]]
@@ -3984,9 +3994,10 @@ docs = ["furo", "jaraco.packaging (>=9)", "jaraco.tidelift (>=1.4)", "rst.linker
 testing = ["big-O", "flake8 (<5)", "jaraco.functools", "jaraco.itertools", "more-itertools", "pytest (>=6)", "pytest-black (>=0.3.7)", "pytest-checkdocs (>=2.4)", "pytest-cov", "pytest-enabler (>=1.3)", "pytest-flake8", "pytest-mypy (>=0.9.1)"]
 
 [extras]
+gradio = []
 torch = ["torch"]
 
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.8,<4.0"
-content-hash = "d33508ceca603d28be7c77c06736135ae5fe8a133f7197a111282db1e60dddd5"
+content-hash = "c7fd1f0a9d44c29e7a93e55896032c0ae865b2a03b8bd7bcf1f7a9d5f6660cbe"

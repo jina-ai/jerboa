@@ -37,6 +37,8 @@ typer = {version = "^0.9.0", extras = ["all"]}
 
 [tool.poetry.extras]
 torch = ["torch"]
+gradio = ["gradio"]
+
 
 [tool.black]
 skip-string-normalization = true # equivalent to black -S
