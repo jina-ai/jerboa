@@ -28,15 +28,16 @@ model = AutoModelForCausalLM.from_pretrained(
     quantization_config=QUANT_CONFIG,
     trust_remote_code=True,
 )
-model = PeftModel.from_pretrained(
-    model,
-    LORA_WEIGHTS,
-    torch_dtype=torch.float16,
-)
 
 PEFT_CONFIG = PeftConfig.from_pretrained(
     LORA_WEIGHTS,
     trust_remote=True,
+)
+
+model = PeftModel.from_pretrained(
+    model,
+    LORA_WEIGHTS,
+    torch_dtype=torch.float16,
 )
 
 tokenizer = AutoTokenizer.from_pretrained(
@@ -89,4 +90,6 @@ demo = gr.Interface(
     inputs=[gr.Textbox(lines=2, placeholder="Prompt here"), gr.Slider(5, 1024)],
     outputs="text",
 )
-demo.launch(share=True)
+
+if __name__ == "__main__":
+    demo.launch(share=True)
