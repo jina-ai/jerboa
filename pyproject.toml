@@ -45,3 +45,7 @@ skip-string-normalization = true # equivalent to black -S
 ignore = [
     "E501",  # line too long, handled by black
 ]
+[tool.pytest.ini_options]
+markers = [
+    "slow: marks tests as slow (deselect with '-m \"not slow\"')"
+]
