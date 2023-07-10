@@ -11,7 +11,7 @@ def load_model(
     base_model: str = 'tiiuae/falcon-7b',
     lora_dir: str = '',
 ) -> AutoModelForCausalLM:
-    """Load a model from a base model, optionally lora weights
+    """Load a model from a base model, optionally  include lora weights
 
     Args:
         base_model (str): The base model to load
@@ -64,6 +64,6 @@ def load_model(
     return model
 
 if __name__ == '__main__':
-    model = load_model(lora_dir='jina-ai/jerboa/lora_weight:v18')
+    model = load_model(lora_dir='jinaai/falcon-7b')
     print(model)
     print("Done!")
