@@ -59,7 +59,7 @@ def load_model(
         """
 
         return PeftModel.from_pretrained(
-            base_model=base_model,
+            model=base_model,
             model_id=lora_dir,
         )
 
