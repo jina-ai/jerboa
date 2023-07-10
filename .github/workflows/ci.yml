@@ -71,7 +71,7 @@ jobs:
       - name: Test
         id: test
         run: |
-          poetry run pytest tests -m "not-slow"
+          poetry run pytest tests -v -m "not-slow"
         timeout-minutes: 30
 
 # just for blocking the merge until all parallel core-test are successful
