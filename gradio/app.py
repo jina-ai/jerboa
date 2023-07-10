@@ -34,16 +34,18 @@ model = AutoModelForCausalLM.from_pretrained(
     quantization_config=QUANT_CONFIG,
     trust_remote_code=True,
 )
+PEFT_CONFIG = PeftConfig.from_pretrained(
+    LORA_WEIGHTS,
+    trust_remote=True,
+)
 model = PeftModel.from_pretrained(
     model,
     LORA_WEIGHTS,
     torch_dtype=torch.float16,
+    device_map='auto'
 )
 
-PEFT_CONFIG = PeftConfig.from_pretrained(
-    LORA_WEIGHTS,
-    trust_remote=True,
-    )
+
 
 tokenizer = AutoTokenizer.from_pretrained(
     PEFT_CONFIG.base_model_name_or_path,
@@ -60,7 +62,7 @@ def evaluate(
     top_p=0.75,
     top_k=40,
     num_beams=4,
-    max_new_tokens=128,
+    max_new_tokens=5,
     **kwargs,
 ):
     device = 'cuda'
