@@ -19,7 +19,7 @@ def load_model(
 
     Args:
         base_model (str): The base model to load
-        lora_dir (str): The lora weights to load
+        lora_dir (str): The lora weights to load, specify source (hf or wandb) before link, ex: 'wandb:jina-ai/jerboa/lora_weight:v19'
         load_in_4bit (bool): Whether to load in 4bit, ONLY ON GPU
         load_in_8bit (bool): Whether to load in 8bit, ONLY ON GPU
         device_map (str): The device map to use
@@ -65,9 +65,7 @@ def load_model(
     if lora_dir:
         # Check if the lora weights are from wandb or huggingface
         # Wandb sources have two forward slashes, huggingface sources have one
-        from_wandb = len(lora_dir.split('/')) == 3
-
-        if from_wandb:
+        if lora_dir.startswith('wandb:'):
             with tempfile.TemporaryDirectory() as tmpdir:
                 api = wandb.Api()
                 artifact = api.artifact(lora_dir)
