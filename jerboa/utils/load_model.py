@@ -77,9 +77,3 @@ def load_model(
             model = load_peft_model(base_model=model, lora_dir=lora_dir)
 
     return model
-
-
-if __name__ == '__main__':
-    model = load_model(lora_dir='jinaai/falcon-7b')
-    print(model)
-    print("Done!")
