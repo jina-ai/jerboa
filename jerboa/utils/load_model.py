@@ -49,13 +49,13 @@ def load_model(
 
     if lora_dir:
         # Check if the lora weights are from wandb or huggingface
-        # Wandb sources have three forward slashes, huggingface sources have two
+        # Wandb sources have two forward slashes, huggingface sources have one
         from_wandb = len(lora_dir.split('/')) == 3
 
         if from_wandb:
             with tempfile.TemporaryDirectory() as tmpdir:
                 api = wandb.Api()
-                artifact = api.artifact('lora_weights')
+                artifact = api.artifact(lora_dir)
                 lora_dir = artifact.download(tmpdir)
                 model = load_peft_model(model=model, lora_dir=lora_dir)
         else:
@@ -64,6 +64,6 @@ def load_model(
     return model
 
 if __name__ == '__main__':
-    model = load_model()
+    model = load_model(lora_dir='jina-ai/jerboa/lora_weight:v18')
     print(model)
     print("Done!")
