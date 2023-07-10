@@ -9,26 +9,29 @@ from transformers import (
     BitsAndBytesConfig,
     GenerationConfig,
 )
+from jerboa.utils.load_model import load_model
 
 
 app = Typer(pretty_exceptions_enable=False)
-device = "cuda"
-device_map = "auto"
-quant_config = BitsAndBytesConfig(
-    load_in_8bit=True,
-)
+# device = "cuda"
+# device_map = "auto"
+# quant_config = BitsAndBytesConfig(
+#     load_in_8bit=True,
+# )
+#
+# peft_model_id = "jinaai/falcon-7b"
+# config = PeftConfig.from_pretrained(
+#     peft_model_id,
+#     trust_remote=True,
+# )
+# model = AutoModelForCausalLM.from_pretrained(
+#     config.base_model_name_or_path,
+#     trust_remote_code=True,
+#     quantization_config=quant_config,
+#     device_map=device_map,
+# )
 
-peft_model_id = "jinaai/falcon-7b"
-config = PeftConfig.from_pretrained(
-    peft_model_id,
-    trust_remote=True,
-)
-model = AutoModelForCausalLM.from_pretrained(
-    config.base_model_name_or_path,
-    trust_remote_code=True,
-    quantization_config=quant_config,
-    device_map=device_map,
-)
+model = load_model(lora_dir='jinaai/falcon-7b')
 
 model.eval()
 
