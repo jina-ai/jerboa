@@ -3,6 +3,7 @@ from typing import List, Tuple, Dict, Union, Any
 from pathlib import Path
 import os
 from jerboa.utils.prompter import Prompter
+from jerboa.utils.load_model import load_model
 from transformers import (
     AutoModelForCausalLM,
     AutoTokenizer,
@@ -12,12 +13,7 @@ from transformers import (
 )
 from peft import PeftConfig
 from typer import Typer
-
-# Define constants
-QUANT_CONFIG = BitsAndBytesConfig(
-    load_in_8bit=True,
-)
-
+import numpy as np
 
 def create_configuration(tokenizer: PreTrainedTokenizer) -> Dict[str, Any]:
     return {
@@ -31,40 +27,6 @@ def create_configuration(tokenizer: PreTrainedTokenizer) -> Dict[str, Any]:
         'repetition_penalty': 3.0,
         'length_penalty': -100,
     }
-
-
-def load_model_and_tokenizer(
-    model_repo: str = 'jinaai/falcon-7b',
-) -> Tuple[AutoModelForCausalLM, AutoTokenizer]:
-    """Load model and tokenizer from Huggingface model repository
-
-    Args:
-        model_repo: Huggingface ID of repository with LORA weights, FUNCTION DOES NOT LOAD FULL MODEL
-
-    Returns:
-        model: Huggingface model in eval mode
-        tokenizer: Huggingface tokenizer corresponding to model
-    """
-
-    PEFT_CONFIG = PeftConfig.from_pretrained(
-        model_repo,
-        trust_remote=True,
-    )
-    model = AutoModelForCausalLM.from_pretrained(
-        PEFT_CONFIG.base_model_name_or_path,
-        trust_remote_code=True,
-        quantization_config=QUANT_CONFIG,
-    )
-
-    model.eval()
-    tokenizer = AutoTokenizer.from_pretrained(
-        PEFT_CONFIG.base_model_name_or_path,
-        trust_remote_code=True,
-        padding_side='left',
-    )
-    tokenizer.pad_token = tokenizer.eos_token
-
-    return model, tokenizer
 
 
 def load_data(eval_file: Union[str, os.PathLike] = '') -> List[Dict[str, str]]:
@@ -82,24 +44,31 @@ app = Typer(pretty_exceptions_enable=False)
 
 @app.command()
 def main(
-    model: str = 'jinaai/falcon-7b',
+    base_model: str = 'tiiuae/falcon-7b',
+    lora_repo = 'jina-ai/jerboa/lora_weight:v12',
     eval_file: str = "eval.jsonl",
     output_file: str = "output.jsonl",
 ):
     EVAL_PATH = Path(eval_file)
     results = []
-
     eval_data = load_data(eval_file=str(EVAL_PATH))
-    model, tokenizer = load_model_and_tokenizer(model_repo=model)
+    model = load_model(base_model, lora_repo)
+    tokenizer = AutoTokenizer.from_pretrained(
+        base_model,
+        trust_remote_code=True,
+        padding_side='left',
+    )
+    tokenizer.pad_token = tokenizer.eos_token
+
     prompter = Prompter('alpaca')
 
     # Variable to select instances from eval_data based on index
     targets = list(range(len(eval_data)))
-    # targets = np.random.randint(0, 250, 5)
+    # targets = np.random.randint(0, 250, 2)
 
     # Loop over evaluation data
     for i, eval_instance in enumerate(map(eval_data.__getitem__, targets)):
-        print(f"Instance {i} of {len(eval_data)}")
+        print(f"Instance {i} of {len(targets)}")
         prompt = prompter.generate_prompt(
             eval_instance['instruction'],
             eval_instance['instances'][0]['input'],
