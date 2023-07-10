@@ -38,6 +38,7 @@ def load_model(
         bnb_4bit_quant_type="nf4",
         bnb_4bit_compute_dtype=torch.float16,
     )
+    QUANT_CONFIG = QUANT_CONFIG if torch.cuda.is_available() else None
     model = AutoModelForCausalLM.from_pretrained(
         pretrained_model_name_or_path=base_model,
         torch_dtype=torch.float16,
