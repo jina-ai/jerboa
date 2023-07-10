@@ -52,7 +52,7 @@ def evaluate(
     instruction,
     max_new_tokens,
     input=None,
-    temperature=0.1,
+    temperature=0.2,
     top_p=0.75,
     top_k=40,
     num_beams=4,
