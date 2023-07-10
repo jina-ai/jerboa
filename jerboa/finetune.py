@@ -52,8 +52,6 @@ def load_model_tokenizer(
             trust_remote_code=True,
         )
         debug_model.save_pretrained('./trash/empty_model')
-    else:
-        model_config = AutoConfig.from_pretrained(base_model, trust_remote_code=True)
 
     model = base_model if not debug else './trash/empty_model'
 
@@ -305,7 +303,7 @@ def train(
             tokenizer, pad_to_multiple_of=8, return_tensors="pt", padding=True
         ),
     )
-    model.PEFT_CONFIG.use_cache = False
+    # model.use_cache = False
 
     if torch.__version__ >= "2" and sys.platform != "win32":
         model = torch.compile(model)
