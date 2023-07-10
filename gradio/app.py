@@ -1,30 +1,28 @@
 import gradio as gr
-import json
-from typing import List, Tuple, Dict, Union, Any
-from pathlib import Path
-import os
 from jerboa.utils.prompter import Prompter
 from transformers import (
     AutoModelForCausalLM,
     AutoTokenizer,
     BitsAndBytesConfig,
     GenerationConfig,
-    PreTrainedTokenizer,
     AutoConfig,
 )
 from peft import PeftConfig, PeftModel
 import torch
 
 
-
 # Load model
 QUANT_CONFIG = BitsAndBytesConfig(
-        load_in_8bit=False,
-    )
+    load_in_8bit=True,
+)
 
 BASE_MODEL = 'tiiuae/falcon-40b'
-LORA_WEIGHTS = '../artifacts/falcon40b'
+LORA_WEIGHTS = '../artifacts/falcon40b_code_alpaca'
 MODEL_CONFIG = AutoConfig.from_pretrained(BASE_MODEL, trust_remote_code=True)
+PEFT_CONFIG = PeftConfig.from_pretrained(
+    LORA_WEIGHTS,
+    trust_remote=True,
+)
 model = AutoModelForCausalLM.from_pretrained(
     pretrained_model_name_or_path=BASE_MODEL,
     torch_dtype=torch.float16,
@@ -34,18 +32,18 @@ model = AutoModelForCausalLM.from_pretrained(
     quantization_config=QUANT_CONFIG,
     trust_remote_code=True,
 )
+
 PEFT_CONFIG = PeftConfig.from_pretrained(
     LORA_WEIGHTS,
     trust_remote=True,
 )
+
 model = PeftModel.from_pretrained(
     model,
     LORA_WEIGHTS,
     torch_dtype=torch.float16,
     device_map='auto'
 )
-
-
 
 tokenizer = AutoTokenizer.from_pretrained(
     PEFT_CONFIG.base_model_name_or_path,
@@ -55,14 +53,19 @@ tokenizer = AutoTokenizer.from_pretrained(
 tokenizer.pad_token = tokenizer.eos_token
 prompter = Prompter('')
 
+
 def evaluate(
     instruction,
+    max_new_tokens,
     input=None,
-    temperature=0.1,
+    temperature=0.2,
     top_p=0.75,
     top_k=40,
     num_beams=4,
+<<<<<<< HEAD
     max_new_tokens=5,
+=======
+>>>>>>> 1cbcd72a73ae13aa41214fa3331c4608176a8a0e
     **kwargs,
 ):
     device = 'cuda'
@@ -91,15 +94,11 @@ def evaluate(
     return prompter.get_response(output)
 
 
-
-def greet(name):
-    return "Hello " + name + "!"
-
-
-
 demo = gr.Interface(
     fn=evaluate,
-    inputs=gr.Textbox(lines=2, placeholder="Name Here..."),
+    inputs=[gr.Textbox(lines=2, placeholder="Prompt here"), gr.Slider(5, 1024)],
     outputs="text",
 )
-demo.launch(share=True)
+
+if __name__ == "__main__":
+    demo.launch(share=True)
