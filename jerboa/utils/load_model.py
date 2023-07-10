@@ -3,39 +3,54 @@ from peft import PeftModel
 from transformers import (
     AutoModelForCausalLM,
     BitsAndBytesConfig,
+    AutoConfig,
 )
 import wandb
+import torch
 
 
 def load_model(
-    base_model: str = 'tiiuae/falcon-7b',
-    lora_dir: str = '',
+        base_model: str = 'tiiuae/falcon-7b',
+        lora_dir: str = '',
+        load_in_4bit: bool = False,
+        load_in_8bit: bool = True,
+        device_map: str = 'auto',
 ) -> AutoModelForCausalLM:
     """Load a model from a base model, optionally  include lora weights
 
     Args:
         base_model (str): The base model to load
-        lora_weights (str): The lora weights to load
+        lora_dir (str): The lora weights to load
+        load_in_4bit (bool): Whether to load in 4bit, ONLY ON GPU
+        load_in_8bit (bool): Whether to load in 8bit, ONLY ON GPU
+        device_map (str): The device map to use
 
     Returns:
         AutoModelForCausalLM: The loaded model
     """
+    assert not (load_in_4bit and load_in_8bit), "Cannot load in both 4bit and 8bit"
 
     # Define constants
     QUANT_CONFIG = BitsAndBytesConfig(
-        load_in_8bit=False,
+        load_in_4bit=load_in_4bit,
+        load_in_8bit=load_in_8bit,
+        bnb_4bit_use_double_quant=True,
+        bnb_4bit_quant_type="nf4",
+        bnb_4bit_compute_dtype=torch.float16,
     )
     model = AutoModelForCausalLM.from_pretrained(
-        base_model,
-        trust_remote_code=True,
+        pretrained_model_name_or_path=base_model,
+        torch_dtype=torch.float16,
+        device_map=device_map,
         quantization_config=QUANT_CONFIG,
+        trust_remote_code=True,
     )
 
-    def load_peft_model(model: str, lora_dir: str) -> PeftModel:
-        """Load a model with lora weights
+    def load_peft_model(base_model: str, lora_dir: str) -> PeftModel:
+        """Incorporate lora weights into a base model
 
         Args:
-            model (str): The instantiated base model to be adapted
+            base_model (str): The instantiated base model to be adapted
             lora_dir (str): The directory containing the lora weights and configuration
 
         Returns:
@@ -43,7 +58,7 @@ def load_model(
         """
 
         return PeftModel.from_pretrained(
-            model=model,
+            basemodel=base_model,
             model_id=lora_dir,
         )
 
@@ -57,11 +72,12 @@ def load_model(
                 api = wandb.Api()
                 artifact = api.artifact(lora_dir)
                 lora_dir = artifact.download(tmpdir)
-                model = load_peft_model(model=model, lora_dir=lora_dir)
+                model = load_peft_model(base_model=model, lora_dir=lora_dir)
         else:
-            model = load_peft_model(model=model, lora_dir=lora_dir)
+            model = load_peft_model(base_model=model, lora_dir=lora_dir)
 
     return model
+
 
 if __name__ == '__main__':
     model = load_model(lora_dir='jinaai/falcon-7b')
