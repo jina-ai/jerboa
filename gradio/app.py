@@ -62,10 +62,6 @@ def evaluate(
     top_p=0.75,
     top_k=40,
     num_beams=4,
-<<<<<<< HEAD
-    max_new_tokens=5,
-=======
->>>>>>> 1cbcd72a73ae13aa41214fa3331c4608176a8a0e
     **kwargs,
 ):
     device = 'cuda'
