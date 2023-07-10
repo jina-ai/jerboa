@@ -1,19 +1,16 @@
 import json
-from typing import List, Tuple, Dict, Union, Any
+from typing import List, Dict, Union, Any
 from pathlib import Path
 import os
 from jerboa.utils.prompter import Prompter
 from jerboa.utils.load_model import load_model
 from transformers import (
-    AutoModelForCausalLM,
     AutoTokenizer,
-    BitsAndBytesConfig,
     GenerationConfig,
     PreTrainedTokenizer,
 )
-from peft import PeftConfig
 from typer import Typer
-import numpy as np
+
 
 def create_configuration(tokenizer: PreTrainedTokenizer) -> Dict[str, Any]:
     return {
@@ -45,7 +42,7 @@ app = Typer(pretty_exceptions_enable=False)
 @app.command()
 def main(
     base_model: str = 'tiiuae/falcon-7b',
-    lora_repo = 'jina-ai/jerboa/lora_weight:v12',
+    lora_repo='jina-ai/jerboa/lora_weight:v12',
     eval_file: str = "eval.jsonl",
     output_file: str = "output.jsonl",
 ):

@@ -14,7 +14,6 @@ from transformers import (
     AutoConfig,
     AutoModelForCausalLM,
     AutoTokenizer,
-    BitsAndBytesConfig,
 )
 from typer import Typer
 
@@ -60,7 +59,7 @@ def load_model_tokenizer(
         model,
         load_in_4bit=load_in_4bit,
         load_in_8bit=load_in_8bit,
-        device_map=device_map
+        device_map=device_map,
     )
 
     # Prepare model for training

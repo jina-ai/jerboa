@@ -3,18 +3,17 @@ from peft import PeftModel
 from transformers import (
     AutoModelForCausalLM,
     BitsAndBytesConfig,
-    AutoConfig,
 )
 import wandb
 import torch
 
 
 def load_model(
-        base_model: str = 'tiiuae/falcon-7b',
-        lora_dir: str = '',
-        load_in_4bit: bool = False,
-        load_in_8bit: bool = True,
-        device_map: str = 'auto',
+    base_model: str = 'tiiuae/falcon-7b',
+    lora_dir: str = '',
+    load_in_4bit: bool = False,
+    load_in_8bit: bool = True,
+    device_map: str = 'auto',
 ) -> AutoModelForCausalLM:
     """Load a model from a base model, optionally  include lora weights
 
