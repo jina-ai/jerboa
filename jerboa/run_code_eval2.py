@@ -55,6 +55,7 @@ def load_model_and_tokenizer(
         trust_remote_code=True,
         quantization_config=QUANT_CONFIG,
     )
+
     model.eval()
     tokenizer = AutoTokenizer.from_pretrained(
         PEFT_CONFIG.base_model_name_or_path,
