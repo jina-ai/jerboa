@@ -13,7 +13,7 @@ app = Typer(pretty_exceptions_enable=False)
 
 @app.command()
 def launch_app(
-    base_model: str = 'tiiuae/falcon-40b',
+    base_model: str = 'tiiuae/falcon-7b',
     lora_repo: str = 'jina-ai/jerboa/lora_weight:v19',
 ):
     model = load_model(base_model=base_model, lora_dir=lora_repo)
