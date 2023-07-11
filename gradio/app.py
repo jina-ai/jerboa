@@ -14,7 +14,7 @@ app = Typer(pretty_exceptions_enable=False)
 @app.command()
 def launch_app(
     base_model: str = 'tiiuae/falcon-7b',
-    lora_repo: str = 'jina-ai/jerboa/lora_weight:v19',
+    lora_repo: str = 'wandb:jina-ai/jerboa/lora_weight:v19',
 ):
     model = load_model(base_model=base_model, lora_dir=lora_repo)
     tokenizer = AutoTokenizer.from_pretrained(
