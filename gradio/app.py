@@ -66,7 +66,7 @@ def launch_app(
         outputs="text",
     )
 
-    demo.launch()
+    demo.launch(share=True)
 
 
 if __name__ == "__main__":
