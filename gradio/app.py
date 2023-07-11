@@ -2,17 +2,14 @@ import gradio as gr
 from jerboa.utils.prompter import Prompter
 from jerboa.utils.load_model import load_model
 from transformers import (
-    AutoModelForCausalLM,
     AutoTokenizer,
-    BitsAndBytesConfig,
     GenerationConfig,
-    AutoConfig,
 )
-from peft import PeftConfig, PeftModel
 from typer import Typer
 import torch
 
 app = Typer(pretty_exceptions_enable=False)
+
 
 @app.command()
 def launch_app(
@@ -29,14 +26,14 @@ def launch_app(
     prompter = Prompter('')
 
     def evaluate(
-            instruction,
-            max_new_tokens,
-            input=None,
-            temperature=0.2,
-            top_p=0.75,
-            top_k=40,
-            num_beams=4,
-            **kwargs,
+        instruction,
+        max_new_tokens,
+        input=None,
+        temperature=0.2,
+        top_p=0.75,
+        top_k=40,
+        num_beams=4,
+        **kwargs,
     ):
         device = 'cuda'
         prompt = prompter.generate_prompt(instruction, input)
@@ -63,7 +60,6 @@ def launch_app(
         output = tokenizer.decode(s, skip_special_tokens=True)
         return prompter.get_response(output)
 
-
     demo = gr.Interface(
         fn=evaluate,
         inputs=[gr.Textbox(lines=2, placeholder="Prompt here"), gr.Slider(5, 1024)],
@@ -71,6 +67,7 @@ def launch_app(
     )
 
     demo.launch()
+
 
 if __name__ == "__main__":
     app()
