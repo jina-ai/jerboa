@@ -17,7 +17,7 @@ first install poetry
 pip install -U poetry
 ```
 
-If you encounter a keyring error on the Berlin GPU run: 
+If you encounter a keyring error on GPU run: 
 ```bash
 poetry run python -m pip install keyring
 poetry run python -m keyring --disable
@@ -30,7 +30,7 @@ poetry install
 
 this is needed to fixe the OOM problem
 
-For Berlin GPU install torch:
+For GPU install torch finish the torch installation (cuda stuff):
 ```bash
 pip install torch
 ```
@@ -96,7 +96,7 @@ CUDA_VISIBLE_DEVICES=0 python finetune.py --debug
 this still use wandb. If you want to disable wandb you can do
 
 ```bash
-CUDA_VISIBLE_DEVICES=0 python finetune.py --debug --use-wandb=False
+CUDA_VISIBLE_DEVICES=0 python finetune.py --debug --no-use-wandb
 ```
 
 ## Distributed training
@@ -122,6 +122,7 @@ Currently, the training pipeline supports 2 training datasets:
   To use this dataset, simply add the flags `--data-path togethercomputer/RedPajama-Data-Instruct --data-files data/NI_decontaminated.jsonl.zst`
   - P3 (Public Pool of Prompts): A large dataset featuring various creative tasks obtained from crowdsourcing efforts.
   To use this dataset, simply add the flags `--data-path togethercomputer/RedPajama-Data-Instruct --data-files data/P3_decontaminated.jsonl.zst`
+- `databricks/databricks-dolly-15k`: a dataset of 15 instructions, available on the HF datasets hub. To use this dataset, specify the following parameter in the training command: `--data-path "databricks/databricks-dolly-15k"`
 
 You can also come up with a different dataset if it follows the alpaca dataset format. If it follows a different format similar to one of the previously supported formats, you can specify one of the existing dataset preprocessors to transform it to alpaca format during training.
 Just add the following flags:
@@ -182,3 +183,18 @@ python finetune.py \
 --eval-limit: number of examples to evaluate on
 
 Evaluation results will be automatically logged to wandb.
+
+## Gradio app
+You can also serve a gradio app to showcase your model. This can be either a pre-trained model or a fine-tuned model. 
+To serve a gradio app with your specific lora weights just run from the gradio repo.
+```bash
+poetry run python app.py --base-model <wandb path to base_model> --lora-repo <path to wandb or hf adapter weigths>
+```
+
+for example:
+```bash
+poetry run python app.py --base-model tiiuae/falcon-7b --lora-repo wandb:jina-ai/jerboa/lora_weight:v19
+```
+
+See `load_models.py` in `utils` to learn how to correctly specify the path to the lora weights. 
+

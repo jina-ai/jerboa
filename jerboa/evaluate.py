@@ -42,6 +42,7 @@ def evaluate(
             top_p=top_p,
             top_k=top_k,
             num_beams=num_beams,
+            eos_token_id=tokenizer.eos_token_id,
             **kwargs,
         )
 
@@ -52,9 +53,10 @@ def evaluate(
                 return_dict_in_generate=True,
                 output_scores=True,
                 max_new_tokens=max_tokens - len(input_ids),
+                eos_token_id=tokenizer.eos_token_id,
             )
         s = generation_output.sequences[0]
-        output = tokenizer.decode(s)
+        output = tokenizer.decode(s, skip_special_tokens=True)
         yield prompter.get_response(output)
 
     eval_data = []
@@ -73,16 +75,14 @@ def evaluate(
         )[0]
         if eval_limit != 0 and i == eval_limit:
             break
-        results.append(
-            {
-                "id": i,
-                "instruction": eval_instance["instruction"],
-                "input": eval_instance["instances"][0]["input"],
-                "output": output,
-                "alpaca_lora_output": eval_instance["instances"][0][
-                    "stanford_alpaca_output"
-                ],
-                "human_evaluation": eval_instance["instances"][0]["output"],
-            }
-        )
+        result = {
+            "id": i,
+            "instruction": eval_instance["instruction"],
+            "output": output,
+        }
+        for x in eval_instance["instances"][0]:
+            if x not in result:
+                result[x] = eval_instance["instances"][0][x]
+        results.append(result)
+
     return results

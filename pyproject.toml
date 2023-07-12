@@ -27,16 +27,19 @@ loralib = "^0.1.1"
 bitsandbytes = ">=0.39.1"
 datasets = "^2.12.0"
 peft = { git = "https://github.com/huggingface/peft.git" }
-transformers = ">= 4.30.1"
+transformers =  { git = "https://github.com/huggingface/transformers.git" }
 sentencepiece = "^0.1.99"
-accelerate = { git = "https://github.com/huggingface/accelerate.git" }
+accelerate = "0.20.3" # { git = "https://github.com/huggingface/accelerate.git" }
 wandb = "^0.15.3"
 scipy = "^1.9.0"
 einops = "^0.6.1"
 typer = {version = "^0.9.0", extras = ["all"]}
+gradio = { version = "^3.0", optional = true }
 
 [tool.poetry.extras]
 torch = ["torch"]
+gradio = ["gradio"]
+
 
 [tool.black]
 skip-string-normalization = true # equivalent to black -S
@@ -44,4 +47,8 @@ skip-string-normalization = true # equivalent to black -S
 [tool.ruff]
 ignore = [
     "E501",  # line too long, handled by black
+]
+[tool.pytest.ini_options]
+markers = [
+    "slow: marks tests as slow (deselect with '-m \"not slow\"')"
 ]

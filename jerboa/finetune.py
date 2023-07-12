@@ -14,7 +14,6 @@ from transformers import (
     AutoConfig,
     AutoModelForCausalLM,
     AutoTokenizer,
-    BitsAndBytesConfig,
 )
 from typer import Typer
 
@@ -23,6 +22,7 @@ from jerboa.data_processing import load_train_val_data
 from jerboa.evaluate import evaluate
 from jerboa.utils.model_config import low_footprint_general
 from jerboa.utils.prompter import Prompter
+from jerboa.utils.load_model import load_model
 
 is_master_process = int(os.environ.get("LOCAL_RANK", 0)) == 0
 
@@ -51,32 +51,16 @@ def load_model_tokenizer(
             trust_remote_code=True,
         )
         debug_model.save_pretrained('./trash/empty_model')
-    else:
-        model_config = AutoConfig.from_pretrained(base_model, trust_remote_code=True)
 
-    quant_config = BitsAndBytesConfig(
-        load_in_4bit=load_in_4bit,
-        load_in_8bit=load_in_8bit,
-        bnb_4bit_use_double_quant=True,
-        bnb_4bit_quant_type="nf4",
-        bnb_4bit_compute_dtype=torch.float16,
-    )
-    quant_config = quant_config if device == "cuda" else None
     model = base_model if not debug else './trash/empty_model'
 
     # Instantiate Llama model either from base model or from empty model
-    model = AutoModelForCausalLM.from_pretrained(
-        pretrained_model_name_or_path=model,
-        torch_dtype=torch.float16,
+    model = load_model(
+        model,
+        load_in_4bit=load_in_4bit,
+        load_in_8bit=load_in_8bit,
         device_map=device_map,
-        config=model_config,
-        quantization_config=quant_config,
-        trust_remote_code=True,
     )
-
-    # Move model to cpu in debugging mode
-    if debug and device == "cpu":
-        model = model.to(device)
 
     # Prepare model for training
     model = prepare_model_for_kbit_training(model)
@@ -167,9 +151,17 @@ def train(
 
     prompter = Prompter(prompt_template_name)
 
-    device_map = "auto"
+    # Device_map is not compatible with CPU training
+    device = 'cuda' if torch.cuda.is_available() else 'cpu'
+    device_map = "auto" if device == 'cuda' else None
     world_size = int(os.environ.get("WORLD_SIZE", 1))
-    ddp = world_size != 1
+
+    # Only apply if we have more than one GPU, not if we have no GPU
+    def is_distributed():
+        return
+
+    world_size = int(os.environ.get("WORLD_SIZE", 1))
+    ddp = world_size > 1
     if ddp:
         device_map = {"": int(os.environ.get("LOCAL_RANK") or 0)}
         gradient_accumulation_steps = gradient_accumulation_steps // world_size
@@ -195,8 +187,6 @@ def train(
         os.environ["WANDB_MODE"] = "disabled"
     if use_wandb and len(wandb_watch) > 0:
         os.environ["WANDB_WATCH"] = wandb_watch
-
-    device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
     # No quantization available on cpu
     if device == 'cpu' and load_in_4bit:
@@ -313,7 +303,7 @@ def train(
             tokenizer, pad_to_multiple_of=8, return_tensors="pt", padding=True
         ),
     )
-    model.config.use_cache = False
+    # model.use_cache = False
 
     if torch.__version__ >= "2" and sys.platform != "win32":
         model = torch.compile(model)
@@ -322,30 +312,33 @@ def train(
 
     if is_master_process:
         lora_dir = f"{output_dir}/lora_adapter"
+        try:
+            if eval_file:
+                results = evaluate(
+                    model=model,
+                    tokenizer=tokenizer,
+                    eval_file=eval_file,
+                    eval_limit=eval_limit,
+                    max_tokens=max_tokens,
+                )
 
-        if eval_file:
-            results = evaluate(
-                model=model,
-                tokenizer=tokenizer,
-                eval_file=eval_file,
-                eval_limit=eval_limit,
-                max_tokens=max_tokens,
-            )
+                if use_wandb:
+                    columns = list(results[0].keys())
+                    results_data = [[d[key] for key in columns] for d in results]
+                    eval_table = wandb.Table(columns=columns, data=results_data)
+                    run.log({"Evaluation": eval_table})
+                else:
+                    print(results)
+        except Exception:
+            print("Evaluation failed")
 
-            if use_wandb:
-                columns = list(results[0].keys())
-                results_data = [[d[key] for key in columns] for d in results]
-                eval_table = wandb.Table(columns=columns, data=results_data)
-                run.log({"Evaluation": eval_table})
-            else:
-                print(results)
+        finally:
+            model.save_pretrained(lora_dir)
 
-        model.save_pretrained(lora_dir)
-
-        if wandb_log_model and use_wandb:
-            artifact = wandb.Artifact(name='lora_weight', type='model')
-            artifact.add_dir(lora_dir)
-            run.log_artifact(artifact)
+            if wandb_log_model and use_wandb:
+                artifact = wandb.Artifact(name='lora_weight', type='model')
+                artifact.add_dir(lora_dir)
+                run.log_artifact(artifact)
 
 
 if __name__ == "__main__":

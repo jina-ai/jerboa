@@ -52,8 +52,7 @@ def test_eval():
         assert 'id' in res
         assert 'input' in res
         assert 'output' in res
-        assert 'alpaca_lora_output' in res
-        assert 'human_evaluation' in res
+        assert 'stanford_alpaca_output' in res
     assert (
         results[0]['instruction']
         == "The sentence you are given might be too wordy, complicated, or unclear. "
