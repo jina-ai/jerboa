@@ -71,6 +71,8 @@ def load_model(
                 artifact = api.artifact(lora_dir.split('wandb:')[1])
                 lora_dir = artifact.download(tmpdir)
                 model = load_peft_model(base_model=model, lora_dir=lora_dir)
+        elif lora_dir.startswith('hf:'):
+            model = load_peft_model(base_model=model, lora_dir=lora_dir.split('hf:')[1])
         else:
             model = load_peft_model(base_model=model, lora_dir=lora_dir)
 
