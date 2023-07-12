@@ -144,3 +144,5 @@ PREPROCESSORS_MAP[
 ] = redpajamas_p3_to_alpaca_format
 PREPROCESSORS_MAP[('databricks/databricks-dolly-15k', None)] = dolly_to_alpaca_format
 PREPROCESSORS_MAP[('GAIR/lima', None)] = lima_to_alpaca_format
+PREPROCESSORS_MAP[('jinaai/lima', None)] = lima_to_alpaca_format
+PREPROCESSORS_MAP[('jinaai/lima-1k', None)] = lima_to_alpaca_format
