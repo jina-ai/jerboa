@@ -108,7 +108,7 @@ def train(
     micro_batch_size: int = 4,
     num_epochs: int = 3,
     learning_rate: float = 3e-4,
-    training_max_tokens: int = 2048,
+    cutoff_len: int = 256,
     val_set_size: int = 2000,
     # lora hyperparams
     lora_r: int = 8,
@@ -215,13 +215,13 @@ def train(
         result = tokenizer(
             prompt,
             truncation=True,
-            max_length=training_max_tokens,
+            max_length=cutoff_len,
             padding=False,
             return_tensors=None,
         )
         if (
             result["input_ids"][-1] != tokenizer.eos_token_id
-            and len(result["input_ids"]) < training_max_tokens
+            and len(result["input_ids"]) < cutoff_len
             and add_eos_token
         ):
             result["input_ids"].append(tokenizer.eos_token_id)
