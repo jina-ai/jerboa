@@ -68,7 +68,7 @@ def load_model(
         if lora_dir.startswith('wandb:'):
             with tempfile.TemporaryDirectory() as tmpdir:
                 api = wandb.Api()
-                artifact = api.artifact(lora_dir)
+                artifact = api.artifact(lora_dir.split('wandb:')[1])
                 lora_dir = artifact.download(tmpdir)
                 model = load_peft_model(base_model=model, lora_dir=lora_dir)
         else:

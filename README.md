@@ -183,3 +183,18 @@ python finetune.py \
 --eval-limit: number of examples to evaluate on
 
 Evaluation results will be automatically logged to wandb.
+
+## Gradio app
+You can also serve a gradio app to showcase your model. This can be either a pre-trained model or a fine-tuned model. 
+To serve a gradio app with your specific lora weights just run from the gradio repo.
+```bash
+poetry run python app.py --base-model <wandb path to base_model> --lora-repo <path to wandb or hf adapter weigths>
+```
+
+for example:
+```bash
+poetry run python app.py --base-model tiiuae/falcon-7b --lora-repo wandb:jina-ai/jerboa/lora_weight:v19
+```
+
+See `load_models.py` in `utils` to learn how to correctly specify the path to the lora weights. 
+
