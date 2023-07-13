@@ -3,6 +3,7 @@ import inspect
 import os
 import os.path as osp
 import sys
+import traceback
 import uuid
 from typing import Dict, List, Optional, Tuple
 
@@ -327,8 +328,9 @@ def train(
                     run.log({"Evaluation": eval_table})
                 else:
                     print(results)
-        except Exception:
-            print("Evaluation failed")
+        except Exception as e:
+            print("Evaluation failed", e)
+            traceback.print_exc()
 
         finally:
             model.save_pretrained(lora_dir)
