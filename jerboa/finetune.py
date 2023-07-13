@@ -10,19 +10,15 @@ import torch
 import transformers
 import wandb
 from peft import LoraConfig, PeftModel, get_peft_model, prepare_model_for_kbit_training
-from transformers import (
-    AutoConfig,
-    AutoModelForCausalLM,
-    AutoTokenizer,
-)
+from transformers import AutoConfig, AutoModelForCausalLM, AutoTokenizer
 from typer import Typer
 
 import jerboa
 from jerboa.data_processing import load_train_val_data
 from jerboa.evaluate import evaluate
+from jerboa.utils.load_model import load_model
 from jerboa.utils.model_config import low_footprint_general
 from jerboa.utils.prompter import Prompter
-from jerboa.utils.load_model import load_model
 
 is_master_process = int(os.environ.get("LOCAL_RANK", 0)) == 0
 
@@ -34,6 +30,7 @@ def load_model_tokenizer(
     device: str,
     debug: bool = False,
     load_in_4bit: object = False,
+    model_revision: Optional[str] = None,
 ) -> Tuple[PeftModel, transformers.PreTrainedTokenizer]:
     load_in_8bit = True if not load_in_4bit else False
     # No quantization available on cpu
@@ -60,6 +57,7 @@ def load_model_tokenizer(
         load_in_4bit=load_in_4bit,
         load_in_8bit=load_in_8bit,
         device_map=device_map,
+        model_revision=model_revision,
     )
 
     # Prepare model for training
@@ -137,6 +135,7 @@ def train(
     eval_limit: int = 0,  # limit the number of instructions to evaluate on
     dataset_preprocessor: str = 'default',  # name of the dataset_preprocessor
     max_tokens: int = 2048,
+    model_revision: Optional[str] = None,
 ):
     if debug:
         batch_size = 2
@@ -207,6 +206,7 @@ def train(
         device_map=device_map,
         lora_config=_lora_config,
         debug=debug,
+        model_revision=model_revision,
     )
 
     def tokenize(prompt, add_eos_token=True):
