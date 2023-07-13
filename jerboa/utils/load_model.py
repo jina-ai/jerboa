@@ -1,11 +1,10 @@
 import tempfile
-from peft import PeftModel
-from transformers import (
-    AutoModelForCausalLM,
-    BitsAndBytesConfig,
-)
-import wandb
+from typing import Optional
+
 import torch
+import wandb
+from peft import PeftModel
+from transformers import AutoModelForCausalLM, BitsAndBytesConfig
 
 
 def load_model(
@@ -14,6 +13,7 @@ def load_model(
     load_in_4bit: bool = False,
     load_in_8bit: bool = True,
     device_map: str = 'auto',
+    model_revision: Optional[str] = None,
 ) -> AutoModelForCausalLM:
     """Load a model from a base model, optionally  include lora weights
 
@@ -44,6 +44,7 @@ def load_model(
         device_map=device_map,
         quantization_config=QUANT_CONFIG,
         trust_remote_code=True,
+        revision=model_revision,
     )
 
     def load_peft_model(base_model: str, lora_dir: str) -> PeftModel:
