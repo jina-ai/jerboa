@@ -46,7 +46,7 @@ def generate_batch_completion(
 
 if __name__ == "__main__":
     # adjust for n = 10 etc
-    num_samples_per_task = 10
+    num_samples_per_task = 1
     out_path = "results/falcon7b_code_alpaca/eval.jsonl"
     os.makedirs("results/falcon7b_code_alpaca", exist_ok=True)
 

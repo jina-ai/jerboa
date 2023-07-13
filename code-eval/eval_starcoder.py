@@ -43,14 +43,13 @@ def generate_batch_completion(
 
 if __name__ == "__main__":
     # adjust for n = 10 etc
-    num_samples_per_task = 10
+    num_samples_per_task = 1
     out_path = "results/starcoder/eval.jsonl"
     os.makedirs("results/starcoder", exist_ok=True)
 
     tokenizer = AutoTokenizer.from_pretrained(
         "bigcode/starcoder",
         trust_remote_code=True,
-        use_auth_token=TOKEN,
     )
 
     model = torch.compile(
@@ -63,7 +62,7 @@ if __name__ == "__main__":
                 0: "18GiB",
                 1: "18GiB",
             },
-            use_auth_token=TOKEN,
+            load_in_8bit=True,
         ).eval()
     )
 
