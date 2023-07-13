@@ -42,6 +42,8 @@ class Prompter(object):
         # if a label (=response, =output) is provided, it's also appended.
         if self.template_name == "lima":
             res = self.template["prompt"].format(conversation=instruction)
+        elif self.template_name == "dolly_hhrlhf":
+            res = instruction + '\n'
         else:
             if input:
                 res = self.template["prompt_input"].format(
