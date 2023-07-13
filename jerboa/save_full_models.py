@@ -6,10 +6,10 @@ app = Typer(pretty_exceptions_enable=False)
 
 @app.command()
 def save_full_model(
-    base_model: str = 'tiiuae/falcon-7b',
+    base_model: str = 'tiiuae/falcon-40b',
     load_in_4bit: bool = False,
     load_in_8bit: bool = True,
-    lora_weights: str = 'jina-ai/jerboa/lora_weight:v12',
+    lora_weights: str = 'wandb:jina-ai/jerboa/lora_weight:v18',
 ):
     model = load_model(
         base_model,
