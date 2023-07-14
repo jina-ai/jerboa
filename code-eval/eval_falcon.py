@@ -2,16 +2,16 @@ from transformers import (
     AutoTokenizer,
     AutoModelForCausalLM,
     PreTrainedTokenizer,
-    PreTrainedModel,
+    PreTrainedModel, GenerationConfig,
 )
 from core import run_eval, filter_code, fix_indents
 import os
 import torch
+from jerboa.run_code_eval import create_configuration
 from jerboa.utils.load_model import load_model
 
-# TODO: move to python-dotenv
-# add hugging face access token here
-TOKEN = ""
+from core import run_eval, instruct_prompt
+
 
 
 @torch.inference_mode()
@@ -22,33 +22,35 @@ def generate_batch_completion(
     inputs = tokenizer(
         input_batch, return_tensors="pt", return_token_type_ids=False
     ).to(model.device)
+    prompt_input = instruct_prompt(prompt)
+    input_batch = [prompt_input for _ in range(batch_size)]
+    inputs = tokenizer(input_batch, return_tensors="pt").to(model.device)
     input_ids_cutoff = inputs.input_ids.size(dim=1)
 
+    GENERATION_CONFIG = create_configuration(tokenizer)
     generated_ids = model.generate(
-        **inputs,
-        use_cache=True,
-        max_new_tokens=512,
-        temperature=0.2,
-        top_p=0.95,
-        do_sample=True,
-        eos_token_id=tokenizer.eos_token_id,
-        pad_token_id=tokenizer.eos_token_id,  # model has no pad token
+        input_ids=inputs['input_ids'],
+        attention_mask=inputs['attention_mask'],
+        generation_config=GenerationConfig(**GENERATION_CONFIG),
     )
+
 
     batch_completions = tokenizer.batch_decode(
         [ids[input_ids_cutoff:] for ids in generated_ids],
         skip_special_tokens=True,
+        clean_up_tokenization_spaces=False,
     )
 
+    # breakpoint()
     # fix_indents is required to fix the tab character that is generated from starcoder model
-    return [filter_code(fix_indents(completion)) for completion in batch_completions]
+    return batch_completions
 
 
 if __name__ == "__main__":
     # adjust for n = 10 etc
     num_samples_per_task = 1
-    out_path = "results/falcon7b_code_alpaca/eval.jsonl"
-    os.makedirs("results/falcon7b_code_alpaca", exist_ok=True)
+    out_path = "results/falcon7b_code_alpaca_v2/eval.jsonl"
+    os.makedirs("results/falcon7b_code_alpaca_v2", exist_ok=True)
 
     model = torch.compile(
         load_model(
@@ -59,13 +61,12 @@ if __name__ == "__main__":
         ).eval()
     )
 
-    tokenizer = AutoTokenizer.from_pretrained("tiiuae/falcon-7b", use_fast=False)
+    tokenizer = AutoTokenizer.from_pretrained(
+        "tiiuae/falcon-7b",
+        trust_remote_code=True,
+        padding_side='left',
+    )
 
     run_eval(
-        model,
-        tokenizer,
-        num_samples_per_task,
-        out_path,
-        generate_batch_completion,
-        True,
+        model, tokenizer, num_samples_per_task, out_path, generate_batch_completion
     )

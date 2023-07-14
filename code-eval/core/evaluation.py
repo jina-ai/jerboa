@@ -39,9 +39,10 @@ def run_eval(
     out_path: str,
     generate_batch_completion: BatchGenerator,
     format_tabs: bool = False,
+    eval_file: typing.Optional[str] = None
 ):
-    problems = read_problems()
-    # problems = dict(itertools.islice(problems.items(), 20))
+    problems = read_problems() if not eval_file else read_problems(eval_file)
+    #problems = dict(itertools.islice(problems.items(), 10))
     samples = []
     pbar = tqdm(total=len(problems) * num_samples_per_task)
 
