@@ -154,6 +154,7 @@ PREPROCESSORS = {
     'redpajamas_p3_to_alpaca_format': redpajamas_p3_to_alpaca_format,
     'lima_to_alpaca_format': lima_to_alpaca_format,
     'dolly_to_alpaca_format': dolly_to_alpaca_format,
+    'dolly_hhrlhf_to_alpaca_format': dolly_hhrlhf_to_alpaca_format,
     'default': None,
 }
 PREPROCESSORS_MAP = defaultdict(lambda: lambda x: x)
@@ -165,3 +166,4 @@ PREPROCESSORS_MAP[
 ] = redpajamas_p3_to_alpaca_format
 PREPROCESSORS_MAP[('databricks/databricks-dolly-15k', None)] = dolly_to_alpaca_format
 PREPROCESSORS_MAP[('GAIR/lima', None)] = lima_to_alpaca_format
+PREPROCESSORS_MAP[('mosaicml/dolly_hhrlhf', None)] = dolly_hhrlhf_to_alpaca_format
