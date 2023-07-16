@@ -13,6 +13,7 @@ def load_train_val_data(
     val_set_size: int,
     n_samples: int,
     debug: bool,
+    sort: bool,
 ):
     if data_path.endswith(".json") or data_path.endswith(".jsonl"):
         data = load_dataset("json", data_files=data_path)
@@ -40,6 +41,9 @@ def load_train_val_data(
 
     if n_samples:
         train_data = train_data.select(range(n_samples))
+
+    if sort:
+        train_data = train_data.sort('rate')
 
     return train_data, val_data
 

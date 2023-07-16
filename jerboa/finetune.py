@@ -11,6 +11,7 @@ import torch
 import transformers
 import wandb
 from peft import LoraConfig, PeftModel, get_peft_model, prepare_model_for_kbit_training
+from torch.utils.data import DataLoader
 from transformers import AutoConfig, AutoModelForCausalLM, AutoTokenizer
 from typer import Typer
 
@@ -23,6 +24,14 @@ from jerboa.utils.prompter import Prompter
 
 is_master_process = int(os.environ.get("LOCAL_RANK", 0)) == 0
 
+class NoSamplingTrainer(transformers.Trainer):
+    def _get_train_sampler(self) -> Optional[torch.utils.data.Sampler]:
+        # return torch.utils.data.BatchSampler(
+        #     torch.utils.data.SequentialSampler(self.train_dataset),
+        #     batch_size=self.args.train_batch_size * self.args.gradient_accumulation_steps,
+        #     drop_last=self.args.dataloader_drop_last,
+        # )
+        return torch.utils.data.SequentialSampler(self.train_dataset)
 
 def load_model_tokenizer(
     base_model: str,
@@ -136,6 +145,7 @@ def train(
     eval_limit: int = 0,  # limit the number of instructions to evaluate on
     dataset_preprocessor: str = 'default',  # name of the dataset_preprocessor
     model_revision: Optional[str] = None,
+    sort: bool = False,
 ):
     if debug:
         batch_size = 2
@@ -262,6 +272,7 @@ def train(
         val_set_size=val_set_size,
         n_samples=n_samples,
         debug=debug,
+        sort=sort,
     )
     train_data = train_data.map(generate_and_tokenize_prompt)
     if val_data:
@@ -274,7 +285,7 @@ def train(
         model.is_parallelizable = True
         model.model_parallel = True
 
-    trainer = transformers.Trainer(
+    trainer = NoSamplingTrainer(
         model=model,
         train_dataset=train_data,
         eval_dataset=val_data,
