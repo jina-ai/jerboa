@@ -49,8 +49,8 @@ def generate_batch_completion(
 if __name__ == "__main__":
     # adjust for n = 10 etc
     num_samples_per_task = 1
-    out_path = "results/falcon7b_code_alpaca_v2/eval.jsonl"
-    os.makedirs("results/falcon7b_code_alpaca_v2", exist_ok=True)
+    out_path = "results/falcon7b_pure/eval.jsonl"
+    os.makedirs("results/falcon7b_pure", exist_ok=True)
 
     model = torch.compile(
         load_model(
