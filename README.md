@@ -3,7 +3,7 @@
 Jerboa is an experimental repo to finetune several open source LLM (llama, falcon, ...) on several datasets ( alpaca, code-alpaca, ...).
 
 The repo is shared publicly to allow the community to reproduce our results. Though it is still very experimental and a lot
-of breaking change will happen. This is not production ready software. Check ouf [finetuner](https://github.com/jina-ai/finetuner) for a production ready software.
+of breaking change will happen. This is not production ready software. Check out [finetuner](https://github.com/jina-ai/finetuner) for a production ready software.
 
 credits: this project is originally a fork of the great [alpaca lora](https://github.com/tloen/alpaca-lora) repo.
 
