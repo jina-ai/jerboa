@@ -140,6 +140,11 @@ CUDA_VISIBLE_DEVICES=0 pytest tests
 this should take a couple of second to run on a singe 3090. Just doing one epoch over 100 data points
 
 
+### Supported models
+The pipeline is tested with the following models:
+- llama v1 suite
+- llama v2 suite: add the following arguments: `--base-model meta-llama/Llama-2-7b-chat-hf --prompt-template-name llama_alpaca_chat`
+- falcon suite
 
 ### Target modules
 You need to specify the target `lora_target_modules` as for each different model that is used. For Falcon 7b `lora_target_modules=["query_key_value"]`
