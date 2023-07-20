@@ -18,7 +18,9 @@ def save_full_model(
         load_in_8bit=load_in_8bit,
     )
     model = model.merge_and_unload()
-    model.base_model.save_pretrained("full_model", push_to_hub=True, repo_id='jinaai/falcon-40b-code-alpaca')
+    model.BASE_MODEL.save_pretrained(
+        "full_model", push_to_hub=True, repo_id='jinaai/falcon-40b-code-alpaca'
+    )
 
 
 if __name__ == "__main__":
