@@ -1,5 +1,11 @@
 # Jerboa
 
+<p align="center">
+<img src="https://github.com/docarray/docarray/blob/main/.github/logo-Jerboa.svg?raw=true" alt="Jerboa: finetune LLM" width="150px">
+<br>
+<b>Jerboa: fitune LLM</b>
+</p>
+
 Jerboa is an experimental repo to finetune several open source LLM (llama, falcon, ...) on several datasets ( alpaca, code-alpaca, ...).
 
 The repo is shared publicly to allow the community to reproduce our results. Though it is still very experimental and a lot
