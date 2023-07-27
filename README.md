@@ -1,7 +1,7 @@
 # Jerboa
 
 <p align="center">
-<img src="https://github.com/docarray/docarray/blob/main/.github/logo-Jerboa.svg?raw=true" alt="Jerboa: finetune LLM" width="150px">
+<img src="https://github.com/jina-ai/jerboa/blob/main/.github/logo-Jerboa.svg?raw=true" alt="Jerboa: finetune LLM" width="150px">
 <br>
 <b>Jerboa: fitune LLM</b>
 </p>
