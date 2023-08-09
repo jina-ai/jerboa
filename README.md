@@ -3,7 +3,7 @@
 <p align="center">
 <img src="https://github.com/jina-ai/jerboa/blob/main/.github/logo-Jerboa.svg?raw=true" alt="Jerboa: finetune LLM" width="150px">
 <br>
-<b>Jerboa: fitune LLM</b>
+<b>Jerboa: finetune LLM</b>
 </p>
 
 Jerboa is an experimental repo to finetune several open source LLM (llama, falcon, ...) on several datasets ( alpaca, code-alpaca, ...).
