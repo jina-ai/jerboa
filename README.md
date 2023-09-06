@@ -183,6 +183,7 @@ python finetune.py \
   --num-epochs '2' \
   --eval-file 'user_oriented_instructions.jsonl' \
   --eval-limit '5'
+  --adam-betas 0.99 0.999
 ```
 
 --eval-file: path to the evaluation file<br>
