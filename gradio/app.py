@@ -1,12 +1,10 @@
-import gradio as gr
-from jerboa.utils.prompter import Prompter
-from jerboa.utils.load_model import load_model
-from transformers import (
-    AutoTokenizer,
-    GenerationConfig,
-)
-from typer import Typer
 import torch
+from transformers import AutoTokenizer, GenerationConfig
+from typer import Typer
+
+import gradio as gr
+from jerboa.utils.load_model import load_model
+from jerboa.utils.prompter import Prompter
 
 app = Typer(pretty_exceptions_enable=False)
 
@@ -15,6 +13,7 @@ app = Typer(pretty_exceptions_enable=False)
 def launch_app(
     base_model: str = 'tiiuae/falcon-7b',
     lora_repo: str = 'wandb:jina-ai/jerboa/lora_weight:v19',
+    template: str = '',
 ):
     model = load_model(base_model=base_model, lora_dir=lora_repo)
     tokenizer = AutoTokenizer.from_pretrained(
@@ -23,7 +22,7 @@ def launch_app(
         padding_side='left',
     )
     tokenizer.pad_token = tokenizer.eos_token
-    prompter = Prompter('')
+    prompter = Prompter(template)
 
     def evaluate(
         instruction,
