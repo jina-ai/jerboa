@@ -135,6 +135,7 @@ def train(
     eval_file: str = "",  # path to file you want to evaluate on
     eval_limit: int = 0,  # limit the number of instructions to evaluate on
     dataset_preprocessor: str = 'default',  # name of the dataset_preprocessor
+    max_tokens: int = 2048,
     model_revision: Optional[str] = None,
 ):
     if debug:
@@ -319,6 +320,7 @@ def train(
                     tokenizer=tokenizer,
                     eval_file=eval_file,
                     eval_limit=eval_limit,
+                    max_tokens=max_tokens,
                 )
 
                 if use_wandb:
